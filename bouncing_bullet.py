@@ -1,5 +1,6 @@
 import arcade
 import math
+from pymunk.vec2d import Vec2d
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Welcome to Arcade"
@@ -34,17 +35,18 @@ class Shooter(arcade.Window):
         # Set the background window
 
     def setup(self):
-        arcade.set_background_color(arcade.color.SKY_BLUE)
+        arcade.set_background_color(arcade.color.PURPLE_MOUNTAIN_MAJESTY)
 
         bullet=Bullet("./sprites/weapon_gun.png",SCALING,3)
         bullet.center_y = self.height / 2
         bullet.left = 200
         bullet.change_x=3
-        bullet.change_y=3
+        bullet.change_y=1
 
         sprite=arcade.Sprite("./sprites/tile_42.png")
         num_of_tiles_y=math.ceil(SCREEN_HEIGHT/sprite.height)
         num_of_tiles_x=math.ceil(SCREEN_WIDTH/sprite.width)
+        
         for i in range(num_of_tiles_y):
             wall=arcade.Sprite("./sprites/tile_42.png")
             wall.center_y=i*sprite.height
