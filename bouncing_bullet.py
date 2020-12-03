@@ -1,11 +1,19 @@
 import arcade
 import math
+from pymunk.vec2d import Vec2d
 
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
 SCALING = 0.5
 PLAYER_SPEED = 3
+
+MOVE_MAP={
+    arcade.key.W: Vec2d(0,1),
+    arcade.key.S: Vec2d(0,-1),
+    arcade.key.A: Vec2d(-1,0),
+    arcade.key.D: Vec2d(1,0),
+}
 
 # Classes
 
@@ -31,6 +39,8 @@ class Shooter(arcade.Window):
         """
         # Call the parent class constructor
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+
+        self.keys_pressed={k: False for k in MOVE_MAP}
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
@@ -153,24 +163,21 @@ class Shooter(arcade.Window):
         self.all_sprites.update()
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.W:
-            self.player1.change_y = PLAYER_SPEED
-        
-        if key == arcade.key.S:
-            self.player1.change_y = -PLAYER_SPEED
-        
-        if key == arcade.key.A:
-            self.player1.change_x = -PLAYER_SPEED
-        
-        if key == arcade.key.D:
-            self.player1.change_x = PLAYER_SPEED
 
+        self.keys_pressed[key] = True
+
+        move_direction = sum(self.keys_pressed[k] * MOVE_MAP[k] for k in self.keys_pressed)
+        self.player1.change_y= move_direction.normalized().y * PLAYER_SPEED
+        self.player1.change_x= move_direction.normalized().x * PLAYER_SPEED
+ 
     def on_key_release(self, key, modifiers):
 
-        if key == arcade.key.W or key == arcade.key.S:
-            self.player1.change_y = 0
-        if key == arcade.key.A or key == arcade.key.D:
-            self.player1.change_x = 0
+        self.keys_pressed[key] = False
+
+        move_direction = sum(self.keys_pressed[k]*MOVE_MAP[k] for k in self.keys_pressed)
+        self.player1.change_y = move_direction.normalized().y*PLAYER_SPEED
+        self.player1.change_x= move_direction.normalized().x * PLAYER_SPEED
+    
 
 
 # Main code entry point
