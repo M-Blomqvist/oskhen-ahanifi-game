@@ -4,6 +4,7 @@ SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
 SCALING = 0.5
+PLAYER_SPEED = 3
 
 # Classes
 
@@ -19,6 +20,7 @@ class Bullet(arcade.Sprite):
             self.remove_from_sprite_lists()
 
 
+
 class Shooter(arcade.Window):
     """Main welcome window
     """
@@ -31,9 +33,12 @@ class Shooter(arcade.Window):
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
+        self.players = arcade.SpriteList()
         self.all_sprites = arcade.SpriteList()
 
-        # Set the background window
+        # Physics engine currently only handles player-wall collisions
+        self.physics_engine = None
+
 
     def setup(self):
         arcade.set_background_color(arcade.color.SKY_BLUE)
@@ -47,7 +52,7 @@ class Shooter(arcade.Window):
         sprite = arcade.Sprite("./sprites/tile_42.png")
         num_of_tiles_y = math.ceil(SCREEN_HEIGHT / sprite.height)
         num_of_tiles_x = math.ceil(SCREEN_WIDTH / sprite.width)
-        
+
         for i in range(num_of_tiles_y):
             wall = arcade.Sprite("./sprites/tile_42.png")
             wall.center_y = i * sprite.height
@@ -81,6 +86,22 @@ class Shooter(arcade.Window):
         self.bullets.append(bullet)
         self.all_sprites.append(bullet)
 
+
+        ## Player setups
+
+        self.player1 = arcade.Sprite("sprites/duck_small.png", 0.5)
+        self.player1.center_y = self.height / 2
+        self.player1.left = 10
+
+        self.players.append(self.player1)
+
+        # Player - wall Collisions
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player1, self.wall_list)
+
+        #self.all_sprites.append(player1)
+
+
+
     def on_draw(self):
         """Called whenever you need to draw your window
         """
@@ -90,8 +111,11 @@ class Shooter(arcade.Window):
 
         self.all_sprites.draw()
 
+        self.players.draw()
+
     def on_update(self, delta_time):
 
+        ## Bullet bounces
         for bullet in self.bullets:
             bullet.center_x += bullet.change_x
 
@@ -123,7 +147,29 @@ class Shooter(arcade.Window):
                 bullet.change_y *= -1
                 bullet.bounces += 1
 
+        self.physics_engine.update()
+
         self.all_sprites.update()
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.W:
+            self.player1.change_y = PLAYER_SPEED
+        
+        if key == arcade.key.S:
+            self.player1.change_y = -PLAYER_SPEED
+        
+        if key == arcade.key.A:
+            self.player1.change_x = -PLAYER_SPEED
+        
+        if key == arcade.key.D:
+            self.player1.change_x = PLAYER_SPEED
+
+    def on_key_release(self, key, modifiers):
+
+        if key == arcade.key.W or key == arcade.key.S:
+            self.player1.change_y = 0
+        if key == arcade.key.A or key == arcade.key.D:
+            self.player1.change_x = 0
 
 
 # Main code entry point
