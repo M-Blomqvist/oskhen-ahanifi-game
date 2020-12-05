@@ -7,6 +7,7 @@ SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
 SCALING = 0.5
 PLAYER_SPEED = 3
+BULLET_SPEED = 7
 
 MOVE_MAP={
     arcade.key.W: Vec2d(0,1),
@@ -57,8 +58,8 @@ class Shooter(arcade.Window):
         bullet = Bullet("./sprites/weapon_gun.png", SCALING, 3)
         bullet.center_y = self.height / 2
         bullet.left = 200
-        bullet.change_x = 3
-        bullet.change_y = 3
+        bullet.change_x = BULLET_SPEED
+        bullet.change_y = BULLET_SPEED
 
         sprite = arcade.Sprite("./sprites/tile_42.png")
         num_of_tiles_y = math.ceil(SCREEN_HEIGHT / sprite.height)
@@ -167,6 +168,7 @@ class Shooter(arcade.Window):
         self.keys_pressed[key] = True
 
         move_direction = sum(self.keys_pressed[k] * MOVE_MAP[k] for k in self.keys_pressed)
+
         self.player1.change_y= move_direction.normalized().y * PLAYER_SPEED
         self.player1.change_x= move_direction.normalized().x * PLAYER_SPEED
  
