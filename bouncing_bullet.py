@@ -5,14 +5,24 @@ from pymunk.vec2d import Vec2d
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
-SCALING = 0.5
-PLAYER_SPEED = 3
+SCALING = 0.1
+PLAYER_1_SPEED = 3
+PLAYER_2_SPEED = 3
 
-MOVE_MAP={
+TILE_SCALING=1.5
+
+MOVE_MAP_PLAYER_1={
     arcade.key.W: Vec2d(0,1),
     arcade.key.S: Vec2d(0,-1),
     arcade.key.A: Vec2d(-1,0),
     arcade.key.D: Vec2d(1,0),
+}
+
+MOVE_MAP_PLAYER_2={
+    arcade.key.I: Vec2d(0,1),
+    arcade.key.K: Vec2d(0,-1),
+    arcade.key.J: Vec2d(-1,0),
+    arcade.key.L: Vec2d(1,0),
 }
 
 # Classes
@@ -40,7 +50,8 @@ class Shooter(arcade.Window):
         # Call the parent class constructor
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
-        self.keys_pressed={k: False for k in MOVE_MAP}
+        self.move_keys_1_pressed={k: False for k in MOVE_MAP_PLAYER_1}
+        self.move_keys_2_pressed={k: False for k in MOVE_MAP_PLAYER_2}
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
@@ -52,7 +63,32 @@ class Shooter(arcade.Window):
 
 
     def setup(self):
-        arcade.set_background_color(arcade.color.PURPLE_MOUNTAIN_MAJESTY)
+
+            # --- Load in a map from the tiled editor ---
+
+        # Name of map file to load
+        map_name = "./maps/map_1/map.tmx"
+        # Name of the layer in the file that has our platforms/walls
+        walls_layer_name = 'walls'
+        # Name of the layer that has floor
+        floor_layer_name = 'floor'
+
+        my_map = arcade.tilemap.read_tmx(map_name)
+        self.wall_list = arcade.tilemap.process_layer(map_object=my_map,
+                                                      layer_name=walls_layer_name,
+                                                      scaling=TILE_SCALING,
+                                                      use_spatial_hash=True)
+
+        #points= arcade.PointList(arcade.Point((1,1)),arcade.Point((1,0)),arcade.Point((0,1)),arcade.Point((0,0)))
+        
+        #-- Floor
+        self.floor_list = arcade.tilemap.process_layer(my_map, floor_layer_name, TILE_SCALING)
+
+        self.all_sprites.extend(self.floor_list) #extend appends spriteList
+        self.all_sprites.extend(self.wall_list)
+
+
+        #arcade.set_background_color(arcade.color.PURPLE_MOUNTAIN_MAJESTY)
 
         bullet = Bullet("./sprites/weapon_gun.png", SCALING, 3)
         bullet.center_y = self.height / 2
@@ -60,39 +96,39 @@ class Shooter(arcade.Window):
         bullet.change_x = 3
         bullet.change_y = 3
 
-        sprite = arcade.Sprite("./sprites/tile_42.png")
-        num_of_tiles_y = math.ceil(SCREEN_HEIGHT / sprite.height)
-        num_of_tiles_x = math.ceil(SCREEN_WIDTH / sprite.width)
+        # sprite = arcade.Sprite("./sprites/tile_42.png")
+        # num_of_tiles_y = math.ceil(SCREEN_HEIGHT / sprite.height)
+        # num_of_tiles_x = math.ceil(SCREEN_WIDTH / sprite.width)
 
-        for i in range(num_of_tiles_y):
-            wall = arcade.Sprite("./sprites/tile_42.png")
-            wall.center_y = i * sprite.height
-            wall.left = 0
+        # for i in range(num_of_tiles_y):
+        #     wall = arcade.Sprite("./sprites/tile_42.png")
+        #     wall.center_y = i * sprite.height
+        #     wall.left = 0
 
-            self.wall_list.append(wall)
-            self.all_sprites.append(wall)
+        #     self.wall_list.append(wall)
+        #     self.all_sprites.append(wall)
 
-            wall = arcade.Sprite("./sprites/tile_42.png")
-            wall.center_y = i * sprite.height
-            wall.right = num_of_tiles_x * sprite.width - (sprite.height / 2)
+        #     wall = arcade.Sprite("./sprites/tile_42.png")
+        #     wall.center_y = i * sprite.height
+        #     wall.right = num_of_tiles_x * sprite.width - (sprite.height / 2)
 
-            self.wall_list.append(wall)
-            self.all_sprites.append(wall)
+        #     self.wall_list.append(wall)
+        #     self.all_sprites.append(wall)
 
-        for i in range(num_of_tiles_x):
-            wall = arcade.Sprite("./sprites/tile_42.png")
-            wall.center_x = i * sprite.width
-            wall.bottom = 0
+        # for i in range(num_of_tiles_x):
+        #     wall = arcade.Sprite("./sprites/tile_42.png")
+        #     wall.center_x = i * sprite.width
+        #     wall.bottom = 0
 
-            self.wall_list.append(wall)
-            self.all_sprites.append(wall)
+        #     self.wall_list.append(wall)
+        #     self.all_sprites.append(wall)
 
-            wall = arcade.Sprite("./sprites/tile_42.png")
-            wall.center_x = i * sprite.width
-            wall.top = num_of_tiles_y * sprite.width - (sprite.width / 2)
+        #     wall = arcade.Sprite("./sprites/tile_42.png")
+        #     wall.center_x = i * sprite.width
+        #     wall.top = num_of_tiles_y * sprite.width - (sprite.width / 2)
 
-            self.wall_list.append(wall)
-            self.all_sprites.append(wall)
+        #     self.wall_list.append(wall)
+        #     self.all_sprites.append(wall)
 
         self.bullets.append(bullet)
         self.all_sprites.append(bullet)
@@ -100,11 +136,12 @@ class Shooter(arcade.Window):
 
         ## Player setups
 
-        self.player1 = arcade.Sprite("sprites/duck_small.png", 0.5)
+        self.player1 = arcade.Sprite("sprites/duck_small.png", 0.2)
         self.player1.center_y = self.height / 2
-        self.player1.left = 10
+        self.player1.left = 100
 
         self.players.append(self.player1)
+
 
         # Player - wall Collisions
         self.physics_engine = arcade.PhysicsEngineSimple(self.player1, self.wall_list)
@@ -119,7 +156,6 @@ class Shooter(arcade.Window):
 
         # Clear the screen and start drawing
         arcade.start_render()
-
         self.all_sprites.draw()
 
         self.players.draw()
@@ -164,19 +200,21 @@ class Shooter(arcade.Window):
 
     def on_key_press(self, key, modifiers):
 
-        self.keys_pressed[key] = True
+        if key in self.move_keys_1_pressed:
+            self.move_keys_1_pressed[key] = True
+            move_direction = sum(self.move_keys_1_pressed[k] * MOVE_MAP_PLAYER_1[k] for k in self.move_keys_1_pressed).normalized()
+            self.player1.change_y= move_direction.y * PLAYER_1_SPEED
+            self.player1.change_x= move_direction.x * PLAYER_1_SPEED
 
-        move_direction = sum(self.keys_pressed[k] * MOVE_MAP[k] for k in self.keys_pressed)
-        self.player1.change_y= move_direction.normalized().y * PLAYER_SPEED
-        self.player1.change_x= move_direction.normalized().x * PLAYER_SPEED
+        
  
     def on_key_release(self, key, modifiers):
 
-        self.keys_pressed[key] = False
-
-        move_direction = sum(self.keys_pressed[k]*MOVE_MAP[k] for k in self.keys_pressed)
-        self.player1.change_y = move_direction.normalized().y*PLAYER_SPEED
-        self.player1.change_x= move_direction.normalized().x * PLAYER_SPEED
+        if key in self.move_keys_1_pressed:
+            self.move_keys_1_pressed[key] = False
+            move_direction = sum(self.move_keys_1_pressed[k] * MOVE_MAP_PLAYER_1[k] for k in self.move_keys_1_pressed).normalized()
+            self.player1.change_y= move_direction.y * PLAYER_1_SPEED
+            self.player1.change_x= move_direction.x * PLAYER_1_SPEED
     
 
 
