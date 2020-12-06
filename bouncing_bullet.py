@@ -34,6 +34,7 @@ class Bullet(arcade.Sprite):
         self.bounces = 0
         self.max_bounces = max_bounces
         self.speed = speed
+        self.color=arcade.color.BRIGHT_GREEN
 
     def update(self):
         if self.bounces > self.max_bounces:
@@ -272,7 +273,7 @@ class Shooter(arcade.Window):
 
 
     def spawn_bullet(self):
-        bullet = Bullet("./sprites/weapon_gun.png", 1, 3)
+        bullet = Bullet("./sprites/weapon_gun.png", 1, 5)
         bullet.change_x = self.facing_direction.x * bullet.speed
         bullet.change_y = self.facing_direction.y * bullet.speed
 
