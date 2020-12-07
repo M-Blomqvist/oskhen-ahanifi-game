@@ -1,6 +1,10 @@
 import arcade
 import math
 from pymunk.vec2d import Vec2d
+import time
+
+from dataclasses import dataclass
+from typing import List
 
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
@@ -10,6 +14,8 @@ PLAYER_1_SPEED = 5
 PLAYER_2_SPEED = 3
 
 TILE_SCALING = 1.5
+
+# Keybindings
 
 MOVE_MAP_PLAYER_1 = {
     arcade.key.W: Vec2d(0, 1),
@@ -28,13 +34,66 @@ MOVE_MAP_PLAYER_2 = {
 # Classes
 
 
+class DashState():
+    def process_input(self, key):
+        return
+
+
+class DefaultState():
+
+    def __init__(self):
+        self.time_since_dmg=1000
+
+    def update(self,delta_time):
+        self.time_since_dmg+=delta_time
+
+    def take_damage(self,player,damage):
+        if self.time_since_dmg>1:
+            self.time_since_dmg=0
+            player.health -= damage
+            if player.health <= 0:
+                player.health = 0
+                print("I'm legally dead")
+
+            num_dashes = int(player.health/10)
+            text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
+            print(text)
+
+    def on_key_press(self, player, key):
+        if key in player.MOVE_MAP:
+            player.keys_pressed[key] = True
+            player.move_direction = sum(
+                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
+            player.change_y = player.move_direction.y * player.speed
+            player.change_x = player.move_direction.x * player.speed
+
+            if player.move_direction != Vec2d(0, 0):
+                player.facing_direction = player.move_direction
+
+        elif key == arcade.key.LSHIFT and time.time()-player.time_dashed > 2:
+            print("dash")
+            player.speed *= 2
+            player.time_dashed = time.time()
+
+    def on_key_release(self, player, key):
+        if key in player.MOVE_MAP:
+            player.keys_pressed[key] = False
+            player.move_direction = sum(
+                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
+            player.change_y = player.move_direction.y * player.speed
+            player.change_x = player.move_direction.x * player.speed
+
+            if player.move_direction != Vec2d(0, 0):
+                player.facing_direction = player.move_direction
+
+
 class Bullet(arcade.Sprite):
     def __init__(self, filename, scaling, max_bounces, speed=5):
         super().__init__(filename, scaling)
         self.bounces = 0
         self.max_bounces = max_bounces
         self.speed = speed
-        self.color=arcade.color.BRIGHT_GREEN
+        self.color = arcade.color.BRIGHT_GREEN
 
     def update(self):
         if self.bounces > self.max_bounces:
@@ -42,27 +101,43 @@ class Bullet(arcade.Sprite):
 
 
 class Player(arcade.Sprite):
-    def __init__(self, filename, scaling, health=100):
+    def __init__(self, filename, scaling, MOVE_MAP, health=100, speed=5):
         super().__init__(filename, scaling)
+        self.speed = speed
         self.health = health
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
+        self.MOVE_MAP = MOVE_MAP
+        self.keys_pressed = {k: False for k in self.MOVE_MAP}
+
+        self.state = DefaultState()
+
+    def update(self,delta_time):
+        self.state.update(delta_time)
 
     def shoot(self):
         bullet = Bullet("./sprites/weapon_gun.png", 1, 3)
         bullet.change_x = self.facing_direction.x * bullet.speed
         bullet.change_y = self.facing_direction.y * bullet.speed
 
-        start_x = self.player1.center_x
-        start_y = self.player1.center_y
+        start_x = self.center_x
+        start_y = self.center_y
         bullet.center_x = start_x
         bullet.center_y = start_y
-        angle = math.atan2(self.facing_direction.y/self.facing_direction.x)
+        angle = math.atan2(self.facing_direction.y, self.facing_direction.x)
 
         bullet.angle = math.degrees(angle)
 
-        self.bullets.append(bullet)
-        self.all_sprites.append(bullet)
+        return bullet
+
+    def take_damage(self, damage):
+        self.state.take_damage(self,damage)
+
+    def on_key_press(self, key, modifiers):
+        self.state.on_key_press(player=self, key=key)
+
+    def on_key_release(self, key, modifiers):
+        self.state.on_key_release(player=self, key=key)
 
 
 class Shooter(arcade.Window):
@@ -74,9 +149,6 @@ class Shooter(arcade.Window):
         """
         # Call the parent class constructor
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-
-        self.move_keys_1_pressed = {k: False for k in MOVE_MAP_PLAYER_1}
-        self.move_keys_2_pressed = {k: False for k in MOVE_MAP_PLAYER_2}
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
@@ -106,8 +178,6 @@ class Shooter(arcade.Window):
                                                       scaling=TILE_SCALING,
                                                       use_spatial_hash=True)
 
-        #points= arcade.PointList(arcade.Point((1,1)),arcade.Point((1,0)),arcade.Point((0,1)),arcade.Point((0,0)))
-
         #-- Floor
         self.floor_list = arcade.tilemap.process_layer(
             my_map, floor_layer_name, TILE_SCALING)
@@ -119,56 +189,17 @@ class Shooter(arcade.Window):
         self.all_sprites.extend(self.floor_list)  # extend appends spriteList
         self.all_sprites.extend(self.wall_list)
 
-        # arcade.set_background_color(arcade.color.PURPLE_MOUNTAIN_MAJESTY)
-
         bullet = Bullet("./sprites/weapon_gun.png", SCALING, 3)
         bullet.center_y = self.height / 2
         bullet.left = 200
         bullet.change_x = 3
         bullet.change_y = 3
 
-        # sprite = arcade.Sprite("./sprites/tile_42.png")
-        # num_of_tiles_y = math.ceil(SCREEN_HEIGHT / sprite.height)
-        # num_of_tiles_x = math.ceil(SCREEN_WIDTH / sprite.width)
-
-        # for i in range(num_of_tiles_y):
-        #     wall = arcade.Sprite("./sprites/tile_42.png")
-        #     wall.center_y = i * sprite.height
-        #     wall.left = 0
-
-        #     self.wall_list.append(wall)
-        #     self.all_sprites.append(wall)
-
-        #     wall = arcade.Sprite("./sprites/tile_42.png")
-        #     wall.center_y = i * sprite.height
-        #     wall.right = num_of_tiles_x * sprite.width - (sprite.height / 2)
-
-        #     self.wall_list.append(wall)
-        #     self.all_sprites.append(wall)
-
-        # for i in range(num_of_tiles_x):
-        #     wall = arcade.Sprite("./sprites/tile_42.png")
-        #     wall.center_x = i * sprite.width
-        #     wall.bottom = 0
-
-        #     self.wall_list.append(wall)
-        #     self.all_sprites.append(wall)
-
-        #     wall = arcade.Sprite("./sprites/tile_42.png")
-        #     wall.center_x = i * sprite.width
-        #     wall.top = num_of_tiles_y * sprite.width - (sprite.width / 2)
-
-        #     self.wall_list.append(wall)
-        #     self.all_sprites.append(wall)
-
         self.bullets.append(bullet)
         self.all_sprites.append(bullet)
 
         # Player setups
-        self.move_direction = Vec2d(0, 0)
-        self.facing_direction = Vec2d(1, 0)
-
-        self.player1 = arcade.Sprite("sprites/duck_small.png", 0.2)
+        self.player1 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1)
         self.player1.center_y = self.height / 2
         self.player1.left = 100
 
@@ -178,6 +209,7 @@ class Shooter(arcade.Window):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player1, self.wall_list)
 
+        self.time_since_dmg = 10000
         # self.all_sprites.append(player1)
 
     def on_draw(self):
@@ -234,11 +266,15 @@ class Shooter(arcade.Window):
 
         if self.player1.collides_with_list(self.deadly_list):
             self.player1.color = arcade.color.AFRICAN_VIOLET
+            self.player1.take_damage(10)
         else:
             self.player1.color = arcade.color.NON_PHOTO_BLUE
 
-        self.player1.change_y = self.move_direction.y*PLAYER_1_SPEED
-        self.player1.change_x = self.move_direction.x*PLAYER_1_SPEED
+        for player in self.players:
+            player.change_x = player.move_direction.x*player.speed
+            player.change_y = player.move_direction.y*player.speed
+
+        self.player1.update(delta_time)
 
         self.physics_engine.update()
 
@@ -246,47 +282,23 @@ class Shooter(arcade.Window):
 
     def on_key_press(self, key, modifiers):
 
-        if key == arcade.key.SPACE:
-            self.spawn_bullet()
+        if key == arcade.key.C:
+            bullet = self.player1.shoot()
+            self.bullets.append(bullet)
+            self.all_sprites.append(bullet)
 
-        if key in self.move_keys_1_pressed:
-            self.move_keys_1_pressed[key] = True
-            self.move_direction = sum(
-                self.move_keys_1_pressed[k] * MOVE_MAP_PLAYER_1[k] for k in self.move_keys_1_pressed).normalized()  
-            self.player1.change_y = self.move_direction.y * PLAYER_1_SPEED
-            self.player1.change_x = self.move_direction.x * PLAYER_1_SPEED
+        elif key == arcade.key.N:
+            bullet = self.player2.shoot()
+            self.bullets.append(bullet)
+            self.all_sprites.append(bullet)
 
-            if self.move_direction != Vec2d(0, 0):
-                self.facing_direction = self.move_direction
-              
+        for player in self.players:
+            player.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
-        if key in self.move_keys_1_pressed:
-            self.move_keys_1_pressed[key] = False
-            self.move_direction = sum(
-                self.move_keys_1_pressed[k] * MOVE_MAP_PLAYER_1[k] for k in self.move_keys_1_pressed).normalized()
-            self.player1.change_y = self.move_direction.y * PLAYER_1_SPEED
-            self.player1.change_x = self.move_direction.x * PLAYER_1_SPEED
 
-            if self.move_direction != Vec2d(0, 0):
-                self.facing_direction = self.move_direction
-
-
-    def spawn_bullet(self):
-        bullet = Bullet("./sprites/weapon_gun.png", 1, 5)
-        bullet.change_x = self.facing_direction.x * bullet.speed
-        bullet.change_y = self.facing_direction.y * bullet.speed
-
-        start_x = self.player1.center_x
-        start_y = self.player1.center_y
-        bullet.center_x = start_x
-        bullet.center_y = start_y
-
-        angle = math.atan2(self.facing_direction.y, self.facing_direction.x)
-        bullet.angle = math.degrees(angle)
-
-        self.bullets.append(bullet)
-        self.all_sprites.append(bullet)
+        for player in self.players:
+            player.on_key_release(key, modifiers)
 
 
 # Main code entry point
