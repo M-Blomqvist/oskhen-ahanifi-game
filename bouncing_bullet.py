@@ -91,7 +91,10 @@ class GameView(arcade.View):
         arcade.start_render()
         self.all_sprites.draw()
         self.bullets.draw()
-
+        for player in self.players:
+            num_dashes = int(player.health/10)
+            text = f"|"+'-'*num_dashes+' '*(10-num_dashes)+'|'
+            arcade.draw_text(text, 30, SCREEN_HEIGHT-35, arcade.color.ANTI_FLASH_WHITE, 20)
         self.players.draw()
 
     def on_update(self, delta_time):
@@ -140,13 +143,13 @@ class GameView(arcade.View):
                 player.take_damage(10)
                 bullet.destroy()
 
+        for player in self.players:
+            if player.collides_with_list(self.deadly_list):
+                player.take_damage(10)
+            
 
-        if self.player1.collides_with_list(self.deadly_list):
-            self.player1.take_damage(10)
-        else:
-            self.player1.color = arcade.color.NON_PHOTO_BLUE
-
-        self.player1.update(delta_time)
+        for player in self.players:
+            player.update(delta_time)
 
         hit_list = self.physics_engine.update()
         if len(hit_list) > 0:
@@ -155,6 +158,8 @@ class GameView(arcade.View):
             self.player1.collided = False
 
         self.all_sprites.update()
+        
+        
 
     def on_key_press(self, key, modifiers):
 
