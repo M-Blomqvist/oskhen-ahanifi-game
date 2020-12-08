@@ -70,15 +70,6 @@ class Shooter(arcade.Window):
         self.all_sprites.extend(self.floor_list)  # extend appends spriteList
         self.all_sprites.extend(self.wall_list)
 
-        bullet = Bullet("./sprites/weapon_gun.png", SCALING, 3)
-        bullet.center_y = self.height / 2
-        bullet.left = 200
-        bullet.change_x = 3
-        bullet.change_y = 3
-
-        self.bullets.append(bullet)
-        self.all_sprites.append(bullet)
-
         # Player setups
         self.player1 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1)
         self.player1.center_y = self.height / 2
@@ -90,7 +81,6 @@ class Shooter(arcade.Window):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player1, self.wall_list)
 
-        self.time_since_dmg = 10000
         # self.all_sprites.append(player1)
 
     def on_draw(self):
