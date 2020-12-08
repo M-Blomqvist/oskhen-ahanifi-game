@@ -33,9 +33,10 @@ class Bullet(arcade.Sprite):
 
 @dataclass
 class InputContext():
+    move_map: dict()
     keys_pressed: dict()
     prev_key: arcade.key = None
-    time_since_last: float = None
+    time_since_last: float = 0
 
 
 class DefaultState():
@@ -45,6 +46,7 @@ class DefaultState():
 
     def update(self, player, delta_time):
         self.time_since_dmg += delta_time
+        player.input_context.time_since_last += delta_time
         player.change_x = player.move_direction.x*player.speed
         player.change_y = player.move_direction.y*player.speed
 
@@ -61,10 +63,17 @@ class DefaultState():
             print(text)
 
     def on_key_press(self, player, key):
-        if key in player.MOVE_MAP:
+        player.input_context.time_since_last = 0
+        if key in player.input_context.move_map:
             player.input_context.keys_pressed[key] = True
             player.move_direction = sum(
-                player.input_context.keys_pressed[k] * player.MOVE_MAP[k] for k in player.input_context.keys_pressed).normalized()
+                player.input_context.keys_pressed[k] * player.input_context.move_map[k] for k in player.input_context.keys_pressed).normalized()
+
+            if key == player.input_context.prev_key and player.input_context.time_since_last < 0.1:
+                player.input_context.time_since_last = 0
+                player.change_state(DashState(player, 0.10))
+                return
+
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
@@ -73,21 +82,20 @@ class DefaultState():
 
         elif key == arcade.key.Q:
             player.prev_states.append(player.state)
-            player.state = DashState(player=player, dash_time=0.15)
-        
+            player.state = DashState(player=player, dash_time=0.10)
+
         elif key == arcade.key.C:
             bullet = player.shoot()
             return bullet
 
-        
         player.input_context.prev_key = key
         return
 
     def on_key_release(self, player, key):
-        if key in player.MOVE_MAP:
+        if key in player.input_context.move_map:
             player.input_context.keys_pressed[key] = False
             player.move_direction = sum(
-                player.input_context.keys_pressed[k] * player.MOVE_MAP[k] for k in player.input_context.keys_pressed).normalized()
+                player.input_context.keys_pressed[k] * player.input_context.move_map[k] for k in player.input_context.keys_pressed).normalized()
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
@@ -105,19 +113,19 @@ class DashState(DefaultState):
 
     def update(self, player, delta_time):
         self.time_since_dashed += delta_time
-
+        player.input_context.time_since_last+=delta_time
         if self.time_since_dashed > self.dash_time or player.collided:
             print("end dash")
             player.to_prev_state()
 
     def on_key_press(self, player, key):
-        if key in player.MOVE_MAP:
+        if key in player.input_context.move_map:
             player.input_context.keys_pressed[key] = True
         player.input_context.prev_key = key
         return
 
     def on_key_release(self, player, key):
-        if key in player.MOVE_MAP:
+        if key in player.input_context.move_map:
             player.input_context.keys_pressed[key] = False
         return
 
@@ -132,8 +140,8 @@ class Player(arcade.Sprite):
         self.health = health
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
-        self.MOVE_MAP = MOVE_MAP
-        self.input_context = InputContext({k: False for k in self.MOVE_MAP})
+        self.input_context = InputContext(
+            MOVE_MAP, {k: False for k in MOVE_MAP})
         self.collided = False
 
         self.prev_states = list()
@@ -141,6 +149,10 @@ class Player(arcade.Sprite):
 
     def update(self, delta_time):
         self.state.update(player=self, delta_time=delta_time)
+
+    def change_state(self, state):
+        self.prev_states.append(self.state)
+        self.state = state
 
     def to_prev_state(self):
         # if len(self.prev_states)>0:
@@ -174,4 +186,4 @@ class Player(arcade.Sprite):
 
     def update_direction(self):
         self.move_direction = sum(
-            self.keys_pressed[k] * self.MOVE_MAP[k] for k in self.keys_pressed).normalized()
+            self.input_context.keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.keys_pressed).normalized()
