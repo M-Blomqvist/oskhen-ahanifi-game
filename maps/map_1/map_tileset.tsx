@@ -22,6 +22,16 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="1370">
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="6.00082" width="15.9622" height="9.95507"/>
+  </objectgroup>
+ </tile>
+ <tile id="1371">
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="6.01833" width="15.9617" height="9.94332"/>
+  </objectgroup>
+ </tile>
  <tile id="1387">
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="0.0628532">
@@ -34,6 +44,11 @@
    <object id="1" x="0.0628532" y="8.10806">
     <polygon points="0,0 2.0113,-4.0226 7.85664,-8.17091 16.0276,-8.0452 15.9647,7.85664 -0.0628532,7.85664"/>
    </object>
+  </objectgroup>
+ </tile>
+ <tile id="1406">
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="-0.0333431" y="5.96599" width="15.995" height="10.0325"/>
   </objectgroup>
  </tile>
  <tile id="1445">
