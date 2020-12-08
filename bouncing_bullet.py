@@ -21,7 +21,7 @@ TILE_SCALING = 1.5
 
 # Classes
 
-class Shooter(arcade.Window):
+class GameView(arcade.View):
     """Main welcome window
     """
 
@@ -29,7 +29,7 @@ class Shooter(arcade.Window):
         """Initialize the window
         """
         # Call the parent class constructor
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        super().__init__()
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
@@ -72,7 +72,7 @@ class Shooter(arcade.Window):
 
         # Player setups
         self.player1 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1)
-        self.player1.center_y = self.height / 2
+        self.player1.center_y = self.window.height / 2
         self.player1.left = 100
 
         self.players.append(self.player1)
@@ -172,6 +172,8 @@ class Shooter(arcade.Window):
 
 # Main code entry point
 if __name__ == "__main__":
-    app = Shooter()
-    app.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    start_view = GameView()
+    window.show_view(start_view)
+    start_view.setup()
     arcade.run()
