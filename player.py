@@ -29,6 +29,9 @@ class Bullet(arcade.Sprite):
     def update(self):
         if self.bounces > self.max_bounces:
             self.remove_from_sprite_lists()
+            
+    def destroy(self):
+        self.remove_from_sprite_lists()
 
 
 @dataclass
@@ -173,12 +176,12 @@ class Player(arcade.Sprite):
         self.prev_states.pop(len(self.prev_states)-1)
 
     def shoot(self):
-        bullet = Bullet("./sprites/weapon_gun.png", 1, 3)
+        bullet = Bullet("./sprites/weapon_gun.png", 1, 5)
         bullet.change_x = self.facing_direction.x * bullet.speed
         bullet.change_y = self.facing_direction.y * bullet.speed
 
-        start_x = self.center_x
-        start_y = self.center_y
+        start_x = self.center_x+self.width*self.facing_direction.x
+        start_y = self.center_y+self.height*self.facing_direction.y
         bullet.center_x = start_x
         bullet.center_y = start_y
         angle = math.atan2(self.facing_direction.y, self.facing_direction.x)

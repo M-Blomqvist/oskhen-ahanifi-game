@@ -135,6 +135,12 @@ class GameView(arcade.View):
                 angle = math.atan2(bullet.change_y, bullet.change_x)
                 bullet.angle = math.degrees(angle)
 
+            players_hit=arcade.check_for_collision_with_list(bullet,self.players)
+            for player in players_hit:
+                player.take_damage(10)
+                bullet.destroy()
+
+
         if self.player1.collides_with_list(self.deadly_list):
             self.player1.color = arcade.color.AFRICAN_VIOLET
             self.player1.take_damage(10)
