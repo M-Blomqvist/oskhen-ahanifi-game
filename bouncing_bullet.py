@@ -16,12 +16,12 @@ SCREEN_TITLE = "Under Development"
 SCALING = 0.1
 PLAYER_1_SPEED = 5
 PLAYER_2_SPEED = 3
-
+BULLET_SPEED = 7
 TILE_SCALING = 1.5
 
 # Classes
 
-class Shooter(arcade.Window):
+class GameView(arcade.View):
     """Main welcome window
     """
 
@@ -29,7 +29,7 @@ class Shooter(arcade.Window):
         """Initialize the window
         """
         # Call the parent class constructor
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        super().__init__()
 
         self.bullets = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
@@ -72,7 +72,7 @@ class Shooter(arcade.Window):
 
         # Player setups
         self.player1 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1)
-        self.player1.center_y = self.height / 2
+        self.player1.center_y = self.window.height / 2
         self.player1.left = 100
 
         self.players.append(self.player1)
@@ -169,9 +169,46 @@ class Shooter(arcade.Window):
         for player in self.players:
             player.on_key_release(key, modifiers)
 
+class MenuView(arcade.View):
+
+    def __init__(self):
+        super().__init__()
+
+        self.playscreen = arcade.load_texture("sprites/play.png")
+        self.optionscreen = arcade.load_texture("sprites/options.png")
+        self.quitscreen = arcade.load_texture("sprites/quit.png")
+
+        self.screenlist = [self.playscreen, self.optionscreen, self.quitscreen]
+        self.currentselection = 0
+        
+    
+    def on_draw(self):
+        arcade.start_render()
+        
+        self.screenlist[self.currentselection].draw_sized(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+    def on_key_press(self, key, modifiers):
+        
+        if key == arcade.key.S:
+            self.currentselection = (self.currentselection + 1) % 3
+        
+        if key == arcade.key.W:
+            self.currentselection = (self.currentselection - 1) % 3
+        
+        if key == arcade.key.ENTER:
+            if self.currentselection == 0:
+                game_view = GameView()
+                window.show_view(game_view)
+                game_view.setup()
+                self.window.show_view(game_view)
+
+            elif self.currentselection == 2:
+                self.window.close()
+        
 
 # Main code entry point
 if __name__ == "__main__":
-    app = Shooter()
-    app.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    start_view = MenuView()
+    window.show_view(start_view)
     arcade.run()
