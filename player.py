@@ -90,9 +90,8 @@ class DefaultState():
             if player.move_direction != Vec2d(0, 0):
                 player.facing_direction = player.move_direction
 
-        elif key == arcade.key.LSHIFT and player.cooldowns[DashState].ready():
-            player.change_state(DashState(player, 0.10))
-
+        elif key == arcade.key.LSHIFT:
+            player.dash()
         elif key in inputs.key_map:
             ability=inputs.key_map[key]
             inputs.abilities_pressed[ability]=True
@@ -116,7 +115,7 @@ class DefaultState():
 class DashState(DefaultState):
     def __init__(self, player, dash_time):
         super().__init__()
-        player.cooldowns[DashState].last_used = time.time()
+        player.cooldowns["DashState"].last_used = time.time()
         player.change_y = player.move_direction.y * player.speed*3
         player.change_x = player.move_direction.x * player.speed*3
         self.dash_time = dash_time
@@ -130,14 +129,19 @@ class DashState(DefaultState):
             player.to_prev_state()
 
     def on_key_press(self, player, key):
-        if key in player.input_context.move_map:
-            player.input_context.move_keys_pressed[key] = True
-        player.input_context.prev_key = key
+        inputs=player.input_context
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = True
+        elif key in inputs.key_map:
+            inputs.abilities_pressed[inputs.key_map[key]]=True
         return
 
     def on_key_release(self, player, key):
-        if key in player.input_context.move_map:
-            player.input_context.move_keys_pressed[key] = False
+        inputs=player.input_context
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = False
+        elif key in inputs.key_map:
+            inputs.abilities_pressed[inputs.key_map[key]]=False
         return
 
     def take_damage(self, player, damage):
@@ -209,6 +213,11 @@ class Player(arcade.Sprite):
     def update_direction(self):
         self.move_direction = sum(
             self.input_context.move_keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.move_keys_pressed).normalized()
+
+    def dash(self):
+        self.cooldowns["DashState"].use()
+        self.change_state(DashState(self, 0.10))
+
 
 MOVE_MAP_PLAYER_1 = {
     arcade.key.W: Vec2d(0, 1),
