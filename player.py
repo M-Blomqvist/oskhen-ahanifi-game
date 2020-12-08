@@ -2,6 +2,7 @@ import arcade
 from pymunk.vec2d import Vec2d
 import math
 from dataclasses import dataclass
+import time
 
 MOVE_MAP_PLAYER_1 = {
     arcade.key.W: Vec2d(0, 1),
@@ -16,7 +17,6 @@ MOVE_MAP_PLAYER_2 = {
     arcade.key.J: Vec2d(-1, 0),
     arcade.key.L: Vec2d(1, 0),
 }
-
 
 class Bullet(arcade.Sprite):
     def __init__(self, filename, scaling, max_bounces, speed=5):
@@ -69,22 +69,16 @@ class DefaultState():
             player.move_direction = sum(
                 player.input_context.keys_pressed[k] * player.input_context.move_map[k] for k in player.input_context.keys_pressed).normalized()
 
-            if key == player.input_context.prev_key and player.input_context.time_since_last < 0.1:
-                player.input_context.time_since_last = 0
-                player.change_state(DashState(player, 0.10))
-                return
-
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
             if player.move_direction != Vec2d(0, 0):
                 player.facing_direction = player.move_direction
 
-        elif key == arcade.key.Q:
-            player.prev_states.append(player.state)
-            player.state = DashState(player=player, dash_time=0.10)
+        elif key == arcade.key.LSHIFT and player.cooldowns[DashState].ready():
+            player.change_state(DashState(player, 0.10))
 
-        elif key == arcade.key.C:
+        elif key == arcade.key.SPACE:
             bullet = player.shoot()
             return bullet
 
@@ -106,6 +100,7 @@ class DefaultState():
 class DashState(DefaultState):
     def __init__(self, player, dash_time):
         super().__init__()
+        player.cooldowns[DashState].last_used = time.time()
         player.change_y = player.move_direction.y * player.speed*3
         player.change_x = player.move_direction.x * player.speed*3
         self.dash_time = dash_time
@@ -133,6 +128,23 @@ class DashState(DefaultState):
         super().take_damage(player=player, damage=damage)
 
 
+@dataclass
+class Cooldown():
+    cooldown: float
+    last_used: float=0
+    def ready(self):
+        if time.time()-self.last_used>self.cooldown:
+            return True
+        else:
+            return False
+    
+
+COOLDOWNS ={
+    DashState: Cooldown(2)
+}
+
+
+
 class Player(arcade.Sprite):
     def __init__(self, filename, scaling, MOVE_MAP, health=100, speed=5):
         super().__init__(filename, scaling)
@@ -143,7 +155,7 @@ class Player(arcade.Sprite):
         self.input_context = InputContext(
             MOVE_MAP, {k: False for k in MOVE_MAP})
         self.collided = False
-
+        self.cooldowns=COOLDOWNS
         self.prev_states = list()
         self.state = DefaultState()
 
