@@ -169,11 +169,46 @@ class GameView(arcade.View):
         for player in self.players:
             player.on_key_release(key, modifiers)
 
+class MenuView(arcade.View):
+
+    def __init__(self):
+        super().__init__()
+
+        self.playscreen = arcade.load_texture("sprites/play.png")
+        self.optionscreen = arcade.load_texture("sprites/options.png")
+        self.quitscreen = arcade.load_texture("sprites/quit.png")
+
+        self.screenlist = [self.playscreen, self.optionscreen, self.quitscreen]
+        self.currentselection = 0
+        
+    
+    def on_draw(self):
+        arcade.start_render()
+        
+        self.screenlist[self.currentselection].draw_sized(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+    def on_key_press(self, key, modifiers):
+        
+        if key == arcade.key.S:
+            self.currentselection = (self.currentselection + 1) % 3
+        
+        if key == arcade.key.W:
+            self.currentselection = (self.currentselection - 1) % 3
+        
+        if key == arcade.key.ENTER:
+            if self.currentselection == 0:
+                game_view = GameView()
+                window.show_view(game_view)
+                game_view.setup()
+                self.window.show_view(game_view)
+
+            elif self.currentselection == 2:
+                self.window.close()
+        
 
 # Main code entry point
 if __name__ == "__main__":
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    start_view = GameView()
+    start_view = MenuView()
     window.show_view(start_view)
-    start_view.setup()
     arcade.run()
