@@ -13,15 +13,9 @@ from player import Player,Bullet,MOVE_MAP_PLAYER_1
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
-<<<<<<< HEAD
-SCALING = 0.5
-PLAYER_SPEED = 3
-BULLET_SPEED = 7
-=======
 SCALING = 0.1
 PLAYER_1_SPEED = 5
 PLAYER_2_SPEED = 3
->>>>>>> c1964fc05ce018cedafa2f9f6fe111f77eccb797
 
 TILE_SCALING = 1.5
 
