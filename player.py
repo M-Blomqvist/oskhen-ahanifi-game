@@ -34,9 +34,9 @@ class Bullet(arcade.Sprite):
 @dataclass
 class InputContext():
     keys_pressed: dict()
-    prev_key: arcade.key=None
-    time_since_last: float=None
-    
+    prev_key: arcade.key = None
+    time_since_last: float = None
+
 
 class DefaultState():
 
@@ -74,7 +74,14 @@ class DefaultState():
         elif key == arcade.key.Q:
             player.prev_states.append(player.state)
             player.state = DashState(player=player, dash_time=0.15)
-            print(player.state)
+        
+        elif key == arcade.key.C:
+            bullet = player.shoot()
+            return bullet
+
+        
+        player.input_context.prev_key = key
+        return
 
     def on_key_release(self, player, key):
         if key in player.MOVE_MAP:
@@ -106,6 +113,7 @@ class DashState(DefaultState):
     def on_key_press(self, player, key):
         if key in player.MOVE_MAP:
             player.input_context.keys_pressed[key] = True
+        player.input_context.prev_key = key
         return
 
     def on_key_release(self, player, key):
@@ -125,7 +133,7 @@ class Player(arcade.Sprite):
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
         self.MOVE_MAP = MOVE_MAP
-        self.input_context=InputContext({k: False for k in self.MOVE_MAP})
+        self.input_context = InputContext({k: False for k in self.MOVE_MAP})
         self.collided = False
 
         self.prev_states = list()
@@ -159,10 +167,10 @@ class Player(arcade.Sprite):
         self.state.take_damage(player=self, damage=damage)
 
     def on_key_press(self, key, modifiers):
-        self.state.on_key_press(player=self, key=key)
+        return self.state.on_key_press(player=self, key=key)
 
     def on_key_release(self, key, modifiers):
-        self.state.on_key_release(player=self, key=key)
+        return self.state.on_key_release(player=self, key=key)
 
     def update_direction(self):
         self.move_direction = sum(

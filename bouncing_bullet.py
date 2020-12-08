@@ -163,18 +163,16 @@ class Shooter(arcade.Window):
 
     def on_key_press(self, key, modifiers):
 
-        if key == arcade.key.C:
-            bullet = self.player1.shoot()
-            self.bullets.append(bullet)
-            self.all_sprites.append(bullet)
-
-        elif key == arcade.key.N:
+        if key == arcade.key.N:
             bullet = self.player2.shoot()
             self.bullets.append(bullet)
             self.all_sprites.append(bullet)
 
         for player in self.players:
-            player.on_key_press(key, modifiers)
+            sprite = player.on_key_press(key, modifiers)
+            if sprite != None:
+                self.bullets.append(sprite)
+                self.all_sprites.append(sprite)
 
     def on_key_release(self, key, modifiers):
 
