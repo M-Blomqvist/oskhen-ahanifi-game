@@ -16,7 +16,7 @@ SCREEN_TITLE = "Under Development"
 SCALING = 0.1
 PLAYER_1_SPEED = 5
 PLAYER_2_SPEED = 3
-
+BULLET_SPEED = 7
 TILE_SCALING = 1.5
 
 # Classes
