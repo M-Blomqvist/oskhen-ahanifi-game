@@ -1,6 +1,7 @@
 import arcade
 from pymunk.vec2d import Vec2d
 import math
+from dataclasses import dataclass
 
 MOVE_MAP_PLAYER_1 = {
     arcade.key.W: Vec2d(0, 1),
@@ -30,6 +31,13 @@ class Bullet(arcade.Sprite):
             self.remove_from_sprite_lists()
 
 
+@dataclass
+class InputContext():
+    keys_pressed: dict()
+    prev_key: arcade.key=None
+    time_since_last: float=None
+    
+
 class DefaultState():
 
     def __init__(self):
@@ -54,9 +62,9 @@ class DefaultState():
 
     def on_key_press(self, player, key):
         if key in player.MOVE_MAP:
-            player.keys_pressed[key] = True
+            player.input_context.keys_pressed[key] = True
             player.move_direction = sum(
-                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
+                player.input_context.keys_pressed[k] * player.MOVE_MAP[k] for k in player.input_context.keys_pressed).normalized()
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
@@ -70,9 +78,9 @@ class DefaultState():
 
     def on_key_release(self, player, key):
         if key in player.MOVE_MAP:
-            player.keys_pressed[key] = False
+            player.input_context.keys_pressed[key] = False
             player.move_direction = sum(
-                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
+                player.input_context.keys_pressed[k] * player.MOVE_MAP[k] for k in player.input_context.keys_pressed).normalized()
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
@@ -97,12 +105,12 @@ class DashState(DefaultState):
 
     def on_key_press(self, player, key):
         if key in player.MOVE_MAP:
-            player.keys_pressed[key] = True
+            player.input_context.keys_pressed[key] = True
         return
 
     def on_key_release(self, player, key):
         if key in player.MOVE_MAP:
-            player.keys_pressed[key] = False
+            player.input_context.keys_pressed[key] = False
         return
 
     def take_damage(self, player, damage):
@@ -117,7 +125,7 @@ class Player(arcade.Sprite):
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
         self.MOVE_MAP = MOVE_MAP
-        self.keys_pressed = {k: False for k in self.MOVE_MAP}
+        self.input_context=InputContext({k: False for k in self.MOVE_MAP})
         self.collided = False
 
         self.prev_states = list()
