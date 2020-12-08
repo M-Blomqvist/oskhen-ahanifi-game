@@ -45,7 +45,7 @@ class GameView(arcade.View):
         # --- Load in a map from the tiled editor ---
 
         # Name of map file to load
-        map_name = "./maps/map_1/map.tmx"
+        map_name = "./maps/map_2/map.tmx"
         # Name of the layer in the file that has our platforms/walls
         walls_layer_name = 'walls'
         # Name of the layer that has floor
@@ -152,11 +152,6 @@ class GameView(arcade.View):
         self.all_sprites.update()
 
     def on_key_press(self, key, modifiers):
-
-        if key == arcade.key.N:
-            bullet = self.player2.shoot()
-            self.bullets.append(bullet)
-            self.all_sprites.append(bullet)
 
         for player in self.players:
             sprite = player.on_key_press(key, modifiers)
