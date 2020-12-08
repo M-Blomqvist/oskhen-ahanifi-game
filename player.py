@@ -2,8 +2,6 @@ import arcade
 from pymunk.vec2d import Vec2d
 import math
 
-from bouncing_bullet import Bullet
-
 MOVE_MAP_PLAYER_1 = {
     arcade.key.W: Vec2d(0, 1),
     arcade.key.S: Vec2d(0, -1),
@@ -17,6 +15,19 @@ MOVE_MAP_PLAYER_2 = {
     arcade.key.J: Vec2d(-1, 0),
     arcade.key.L: Vec2d(1, 0),
 }
+
+
+class Bullet(arcade.Sprite):
+    def __init__(self, filename, scaling, max_bounces, speed=5):
+        super().__init__(filename, scaling)
+        self.bounces = 0
+        self.max_bounces = max_bounces
+        self.speed = speed
+        self.color = arcade.color.BRIGHT_GREEN
+
+    def update(self):
+        if self.bounces > self.max_bounces:
+            self.remove_from_sprite_lists()
 
 
 class DefaultState():
@@ -71,6 +82,7 @@ class DefaultState():
 
 class DashState(DefaultState):
     def __init__(self, player, dash_time):
+        super().__init__()
         player.change_y = player.move_direction.y * player.speed*3
         player.change_x = player.move_direction.x * player.speed*3
         self.dash_time = dash_time
@@ -94,7 +106,7 @@ class DashState(DefaultState):
         return
 
     def take_damage(self, player, damage):
-        return  # super().take_damage(player, damage)
+        super().take_damage(player=player, damage=damage)
 
 
 class Player(arcade.Sprite):

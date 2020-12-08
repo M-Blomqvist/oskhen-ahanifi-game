@@ -6,7 +6,9 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from player import Player, MOVE_MAP_PLAYER_1
+from player import Player,Bullet,MOVE_MAP_PLAYER_1
+
+
 
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
@@ -18,20 +20,6 @@ PLAYER_2_SPEED = 3
 TILE_SCALING = 1.5
 
 # Classes
-
-
-class Bullet(arcade.Sprite):
-    def __init__(self, filename, scaling, max_bounces, speed=5):
-        super().__init__(filename, scaling)
-        self.bounces = 0
-        self.max_bounces = max_bounces
-        self.speed = speed
-        self.color = arcade.color.BRIGHT_GREEN
-
-    def update(self):
-        if self.bounces > self.max_bounces:
-            self.remove_from_sprite_lists()
-
 
 class Shooter(arcade.Window):
     """Main welcome window
