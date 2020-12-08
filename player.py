@@ -4,22 +4,29 @@ import math
 from dataclasses import dataclass
 import time
 
-MOVE_MAP_PLAYER_1 = {
-    arcade.key.W: Vec2d(0, 1),
-    arcade.key.S: Vec2d(0, -1),
-    arcade.key.A: Vec2d(-1, 0),
-    arcade.key.D: Vec2d(1, 0),
-}
 
-MOVE_MAP_PLAYER_2 = {
-    arcade.key.I: Vec2d(0, 1),
-    arcade.key.K: Vec2d(0, -1),
-    arcade.key.J: Vec2d(-1, 0),
-    arcade.key.L: Vec2d(1, 0),
-}
+
+
+
+@dataclass
+class Cooldown():
+    cooldown: float
+    last_used: float=0
+    def ready(self):
+        if time.time()-self.last_used>self.cooldown:
+            return True
+        else:
+            return False
+    def use(self):
+        self.last_used=time.time()
+
+COOLDOWNS ={
+    "DashState": Cooldown(2),
+    "shoot":(Cooldown(0.5))
+} 
 
 class Bullet(arcade.Sprite):
-    def __init__(self, filename, scaling, max_bounces, speed=5):
+    def __init__(self, filename, scaling, max_bounces, speed=7):
         super().__init__(filename, scaling)
         self.bounces = 0
         self.max_bounces = max_bounces
@@ -37,17 +44,20 @@ class Bullet(arcade.Sprite):
 @dataclass
 class InputContext():
     move_map: dict()
-    keys_pressed: dict()
+    move_keys_pressed: dict()
+    key_map: dict()
+    abilities_pressed: dict()
     prev_key: arcade.key = None
     time_since_last: float = 0
 
 
 class DefaultState():
-
     def __init__(self):
         self.time_since_dmg = 1000
 
     def update(self, player, delta_time):
+        if player.input_context.abilities_pressed[Player.shoot]==True:
+            player.shoot()
         self.time_since_dmg += delta_time
         player.input_context.time_since_last += delta_time
         player.change_x = player.move_direction.x*player.speed
@@ -67,11 +77,12 @@ class DefaultState():
             print(text)
 
     def on_key_press(self, player, key):
-        player.input_context.time_since_last = 0
-        if key in player.input_context.move_map:
-            player.input_context.keys_pressed[key] = True
+        inputs=player.input_context
+        inputs.time_since_last = 0
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = True
             player.move_direction = sum(
-                player.input_context.keys_pressed[k] * player.input_context.move_map[k] for k in player.input_context.keys_pressed).normalized()
+                inputs.move_keys_pressed[k] * inputs.move_map[k] for k in inputs.move_keys_pressed).normalized()
 
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
@@ -82,24 +93,25 @@ class DefaultState():
         elif key == arcade.key.LSHIFT and player.cooldowns[DashState].ready():
             player.change_state(DashState(player, 0.10))
 
-        elif key == arcade.key.SPACE:
-            bullet = player.shoot()
-            return bullet
-
-        player.input_context.prev_key = key
+        elif key in inputs.key_map:
+            ability=inputs.key_map[key]
+            inputs.abilities_pressed[ability]=True
+        inputs.prev_key = key
         return
 
     def on_key_release(self, player, key):
-        if key in player.input_context.move_map:
-            player.input_context.keys_pressed[key] = False
+        inputs=player.input_context
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = False
             player.move_direction = sum(
-                player.input_context.keys_pressed[k] * player.input_context.move_map[k] for k in player.input_context.keys_pressed).normalized()
+                inputs.move_keys_pressed[k] * inputs.move_map[k] for k in inputs.move_keys_pressed).normalized()
             player.change_y = player.move_direction.y * player.speed
             player.change_x = player.move_direction.x * player.speed
 
             if player.move_direction != Vec2d(0, 0):
                 player.facing_direction = player.move_direction
-
+        elif key in inputs.key_map:
+            inputs.abilities_pressed[inputs.key_map[key]]=False
 
 class DashState(DefaultState):
     def __init__(self, player, dash_time):
@@ -119,47 +131,37 @@ class DashState(DefaultState):
 
     def on_key_press(self, player, key):
         if key in player.input_context.move_map:
-            player.input_context.keys_pressed[key] = True
+            player.input_context.move_keys_pressed[key] = True
         player.input_context.prev_key = key
         return
 
     def on_key_release(self, player, key):
         if key in player.input_context.move_map:
-            player.input_context.keys_pressed[key] = False
+            player.input_context.move_keys_pressed[key] = False
         return
 
     def take_damage(self, player, damage):
         super().take_damage(player=player, damage=damage)
 
-
-@dataclass
-class Cooldown():
-    cooldown: float
-    last_used: float=0
-    def ready(self):
-        if time.time()-self.last_used>self.cooldown:
-            return True
-        else:
-            return False
-    
-
-COOLDOWNS ={
-    DashState: Cooldown(2)
-}
-
-
-
 class Player(arcade.Sprite):
-    def __init__(self, filename, scaling, MOVE_MAP, health=100, speed=5):
+    def __init__(self,arcade, filename, scaling, MOVE_MAP,KEY_MAP, health=100, speed=5):
         super().__init__(filename, scaling)
+        self.arcade=arcade
         self.speed = speed
         self.health = health
+        self.collided = False
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
+
+        abilities_pressed=dict()
+        for k in KEY_MAP:
+            abilities_pressed[KEY_MAP[k]]=False
+
         self.input_context = InputContext(
-            MOVE_MAP, {k: False for k in MOVE_MAP})
-        self.collided = False
+            MOVE_MAP, {k: False for k in MOVE_MAP},KEY_MAP,abilities_pressed)
+       
         self.cooldowns=COOLDOWNS
+
         self.prev_states = list()
         self.state = DefaultState()
 
@@ -177,19 +179,23 @@ class Player(arcade.Sprite):
         self.prev_states.pop(len(self.prev_states)-1)
 
     def shoot(self):
-        bullet = Bullet("./sprites/weapon_gun.png", 1, 5)
-        bullet.change_x = self.facing_direction.x * bullet.speed
-        bullet.change_y = self.facing_direction.y * bullet.speed
+        
+        if self.cooldowns["shoot"].ready():
+            self.cooldowns["shoot"].use()
+            bullet = Bullet("./sprites/weapon_gun.png", 1, 4)
+            bullet.change_x = self.facing_direction.x * bullet.speed
+            bullet.change_y = self.facing_direction.y * bullet.speed
 
-        start_x = self.center_x+self.width*self.facing_direction.x
-        start_y = self.center_y+self.height*self.facing_direction.y
-        bullet.center_x = start_x
-        bullet.center_y = start_y
-        angle = math.atan2(self.facing_direction.y, self.facing_direction.x)
+            start_x = self.center_x+self.width*self.facing_direction.x
+            start_y = self.center_y+self.height*self.facing_direction.y
+            bullet.center_x = start_x
+            bullet.center_y = start_y
+            angle = math.atan2(self.facing_direction.y, self.facing_direction.x)
 
-        bullet.angle = math.degrees(angle)
+            bullet.angle = math.degrees(angle)
 
-        return bullet
+            self.arcade.bullets.append(bullet)
+            self.arcade.all_sprites.append(bullet)
 
     def take_damage(self, damage):
         self.state.take_damage(player=self, damage=damage)
@@ -202,4 +208,22 @@ class Player(arcade.Sprite):
 
     def update_direction(self):
         self.move_direction = sum(
-            self.input_context.keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.keys_pressed).normalized()
+            self.input_context.move_keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.move_keys_pressed).normalized()
+
+MOVE_MAP_PLAYER_1 = {
+    arcade.key.W: Vec2d(0, 1),
+    arcade.key.S: Vec2d(0, -1),
+    arcade.key.A: Vec2d(-1, 0),
+    arcade.key.D: Vec2d(1, 0),
+}
+
+KEY_MAP_PLAYER_1 = {
+    arcade.key.SPACE: Player.shoot,
+}
+
+MOVE_MAP_PLAYER_2 = {
+    arcade.key.I: Vec2d(0, 1),
+    arcade.key.K: Vec2d(0, -1),
+    arcade.key.J: Vec2d(-1, 0),
+    arcade.key.L: Vec2d(1, 0),
+}

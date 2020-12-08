@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from player import Player,Bullet,MOVE_MAP_PLAYER_1
+from player import Player,Bullet,MOVE_MAP_PLAYER_1,MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1
 
 
 
@@ -71,15 +71,23 @@ class GameView(arcade.View):
         self.all_sprites.extend(self.wall_list)
 
         # Player setups
-        self.player1 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1)
+        self.player1 = Player(self,"sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1,KEY_MAP_PLAYER_1)
         self.player1.center_y = self.window.height / 2
         self.player1.left = 100
 
         self.players.append(self.player1)
 
+        # self.player2 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1)
+        # self.player2.center_y = self.window.height / 2
+        # self.player2.left = 400
+
+        # self.players.append(self.player2)
+
         # Player - wall Collisions
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player1, self.wall_list)
+        # self.physics_engine1=arcade.PhysicsEngineSimple(
+        #     self.player2, self.wall_list)
 
         # self.all_sprites.append(player1)
 
@@ -91,10 +99,12 @@ class GameView(arcade.View):
         arcade.start_render()
         self.all_sprites.draw()
         self.bullets.draw()
+        offset_x=0
         for player in self.players:
             num_dashes = int(player.health/10)
-            text = f"|"+'-'*num_dashes+' '*(10-num_dashes)+'|'
-            arcade.draw_text(text, 30, SCREEN_HEIGHT-35, arcade.color.ANTI_FLASH_WHITE, 20)
+            text = f"|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'
+            arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
+            offset_x+=300
         self.players.draw()
 
     def on_update(self, delta_time):
@@ -156,6 +166,12 @@ class GameView(arcade.View):
             self.player1.collided = True
         else:
             self.player1.collided = False
+
+        # self.physics_engine1.update()
+        # if len(hit_list) > 0:
+        #     self.player2.collided = True
+        # else:
+        #     self.player2.collided = False
 
         self.all_sprites.update()
         
