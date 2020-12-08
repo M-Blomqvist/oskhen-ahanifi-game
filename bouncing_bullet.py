@@ -142,7 +142,6 @@ class GameView(arcade.View):
 
 
         if self.player1.collides_with_list(self.deadly_list):
-            self.player1.color = arcade.color.AFRICAN_VIOLET
             self.player1.take_damage(10)
         else:
             self.player1.color = arcade.color.NON_PHOTO_BLUE

@@ -55,6 +55,7 @@ class DefaultState():
 
     def take_damage(self, player, damage):
         if self.time_since_dmg > 1:
+            player.color = arcade.color.AFRICAN_VIOLET
             self.time_since_dmg = 0
             player.health -= damage
             if player.health <= 0:
