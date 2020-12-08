@@ -6,6 +6,8 @@ import time
 from dataclasses import dataclass
 from typing import List
 
+from player import Player, MOVE_MAP_PLAYER_1
+
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Under Development"
@@ -15,76 +17,7 @@ PLAYER_2_SPEED = 3
 
 TILE_SCALING = 1.5
 
-# Keybindings
-
-MOVE_MAP_PLAYER_1 = {
-    arcade.key.W: Vec2d(0, 1),
-    arcade.key.S: Vec2d(0, -1),
-    arcade.key.A: Vec2d(-1, 0),
-    arcade.key.D: Vec2d(1, 0),
-}
-
-MOVE_MAP_PLAYER_2 = {
-    arcade.key.I: Vec2d(0, 1),
-    arcade.key.K: Vec2d(0, -1),
-    arcade.key.J: Vec2d(-1, 0),
-    arcade.key.L: Vec2d(1, 0),
-}
-
 # Classes
-
-
-class DashState():
-    def process_input(self, key):
-        return
-
-
-class DefaultState():
-
-    def __init__(self):
-        self.time_since_dmg=1000
-
-    def update(self,delta_time):
-        self.time_since_dmg+=delta_time
-
-    def take_damage(self,player,damage):
-        if self.time_since_dmg>1:
-            self.time_since_dmg=0
-            player.health -= damage
-            if player.health <= 0:
-                player.health = 0
-                print("I'm legally dead")
-
-            num_dashes = int(player.health/10)
-            text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
-            print(text)
-
-    def on_key_press(self, player, key):
-        if key in player.MOVE_MAP:
-            player.keys_pressed[key] = True
-            player.move_direction = sum(
-                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
-            player.change_y = player.move_direction.y * player.speed
-            player.change_x = player.move_direction.x * player.speed
-
-            if player.move_direction != Vec2d(0, 0):
-                player.facing_direction = player.move_direction
-
-        elif key == arcade.key.LSHIFT and time.time()-player.time_dashed > 2:
-            print("dash")
-            player.speed *= 2
-            player.time_dashed = time.time()
-
-    def on_key_release(self, player, key):
-        if key in player.MOVE_MAP:
-            player.keys_pressed[key] = False
-            player.move_direction = sum(
-                player.keys_pressed[k] * player.MOVE_MAP[k] for k in player.keys_pressed).normalized()
-            player.change_y = player.move_direction.y * player.speed
-            player.change_x = player.move_direction.x * player.speed
-
-            if player.move_direction != Vec2d(0, 0):
-                player.facing_direction = player.move_direction
 
 
 class Bullet(arcade.Sprite):
@@ -98,46 +31,6 @@ class Bullet(arcade.Sprite):
     def update(self):
         if self.bounces > self.max_bounces:
             self.remove_from_sprite_lists()
-
-
-class Player(arcade.Sprite):
-    def __init__(self, filename, scaling, MOVE_MAP, health=100, speed=5):
-        super().__init__(filename, scaling)
-        self.speed = speed
-        self.health = health
-        self.move_direction = Vec2d(0, 0)
-        self.facing_direction = Vec2d(1, 0)
-        self.MOVE_MAP = MOVE_MAP
-        self.keys_pressed = {k: False for k in self.MOVE_MAP}
-
-        self.state = DefaultState()
-
-    def update(self,delta_time):
-        self.state.update(delta_time)
-
-    def shoot(self):
-        bullet = Bullet("./sprites/weapon_gun.png", 1, 3)
-        bullet.change_x = self.facing_direction.x * bullet.speed
-        bullet.change_y = self.facing_direction.y * bullet.speed
-
-        start_x = self.center_x
-        start_y = self.center_y
-        bullet.center_x = start_x
-        bullet.center_y = start_y
-        angle = math.atan2(self.facing_direction.y, self.facing_direction.x)
-
-        bullet.angle = math.degrees(angle)
-
-        return bullet
-
-    def take_damage(self, damage):
-        self.state.take_damage(self,damage)
-
-    def on_key_press(self, key, modifiers):
-        self.state.on_key_press(player=self, key=key)
-
-    def on_key_release(self, key, modifiers):
-        self.state.on_key_release(player=self, key=key)
 
 
 class Shooter(arcade.Window):
@@ -270,13 +163,13 @@ class Shooter(arcade.Window):
         else:
             self.player1.color = arcade.color.NON_PHOTO_BLUE
 
-        for player in self.players:
-            player.change_x = player.move_direction.x*player.speed
-            player.change_y = player.move_direction.y*player.speed
-
         self.player1.update(delta_time)
 
-        self.physics_engine.update()
+        hit_list = self.physics_engine.update()
+        if len(hit_list) > 0:
+            self.player1.collided = True
+        else:
+            self.player1.collided = False
 
         self.all_sprites.update()
 
