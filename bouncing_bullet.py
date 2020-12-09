@@ -78,9 +78,9 @@ class GameView(arcade.View):
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1")
+        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1",Vec2d(1,0))
 
-        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2")
+        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0))
 
         self.players.append(self.player1)
         self.players.append(self.player2)
