@@ -72,8 +72,15 @@ class DefaultState():
 
     def on_key_press(self, player, key):
 
+            # Dev testing
         if key == arcade.key.K:
             player.die()
+
+        if key == arcade.key.T:
+            self.on_key_press(player, arcade.key.SPACE)
+        
+        # -------------
+
 
         inputs=player.input_context
         inputs.time_prev_press = 0
