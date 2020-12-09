@@ -49,7 +49,7 @@ class InputContext():
 
 class DefaultState():
     def __init__(self):
-        self
+        return
 
     def update(self, player, delta_time):
         if player.input_context.abilities_pressed[Player.shoot]==True:
@@ -140,8 +140,19 @@ class DashState(DefaultState):
         return
 
 class SpawnState(DefaultState):
-    def __init__(self):
-        self
+    def __init__(self,player,max_invincible_time=3):
+        self.time_invincible=max_invincible_time
+        player.color=arcade.color.AERO_BLUE
+        player.alpha=210
+
+    def update(self,player,delta_time):
+        
+        self.time_invincible-=delta_time
+        if self.time_invincible<0:
+            player.color=arcade.color.WHITE
+            player.alpha=255
+            player.change_state(state=DefaultState())
+
     def take_damage(self, player, damage):
         return
 
@@ -173,7 +184,7 @@ class Player(arcade.Sprite):
         self.cooldowns=copy.deepcopy(COOLDOWNS)
 
         self.prev_states = list()
-        self.state = DefaultState()
+        self.state = SpawnState(player=self)
 
     def update(self, delta_time):
         self.state.update(player=self, delta_time=delta_time)
