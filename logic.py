@@ -71,6 +71,10 @@ class DefaultState():
 
 
     def on_key_press(self, player, key):
+
+        if key == arcade.key.K:
+            player.die()
+
         inputs=player.input_context
         inputs.time_prev_press = 0
         if key in inputs.move_map:
