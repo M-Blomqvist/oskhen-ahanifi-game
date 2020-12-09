@@ -147,9 +147,6 @@ class DashState(DefaultState):
             inputs.abilities_pressed[inputs.key_map[key]]=False
         return
 
-    def take_damage(self, player, damage):
-        super().take_damage(player=player, damage=damage)
-
 class Player(arcade.Sprite):
     def __init__(self,arcade, filename, scaling, MOVE_MAP,KEY_MAP, health=100, speed=5):
         super().__init__(filename, scaling)
