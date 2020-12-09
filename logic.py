@@ -3,6 +3,7 @@ from pymunk.vec2d import Vec2d
 import math
 from dataclasses import dataclass
 import time
+import copy
 
 @dataclass
 class Cooldown():
@@ -163,7 +164,7 @@ class Player(arcade.Sprite):
         self.input_context = InputContext(
             MOVE_MAP, {k: False for k in MOVE_MAP},KEY_MAP,abilities_pressed)
        
-        self.cooldowns=COOLDOWNS
+        self.cooldowns=copy.deepcopy(COOLDOWNS)
 
         self.prev_states = list()
         self.state = DefaultState()
