@@ -56,8 +56,10 @@ class DefaultState():
         self.time_since_dmg = 1000
 
     def update(self, player, delta_time):
-        if player.input_context.abilities_pressed[Player.shoot]==True:
-            player.shoot()
+        for ability in player.input_context.abilities_pressed:
+            if player.input_context.abilities_pressed[ability] == True:
+                ability(player)
+
         self.time_since_dmg += delta_time
         player.input_context.time_since_last += delta_time
         player.change_x = player.move_direction.x*player.speed
@@ -90,10 +92,8 @@ class DefaultState():
             if player.move_direction != Vec2d(0, 0):
                 player.facing_direction = player.move_direction
 
-        elif key == arcade.key.LSHIFT:
-            player.dash()
         elif key in inputs.key_map:
-            ability=inputs.key_map[key]
+            ability = inputs.key_map[key]
             inputs.abilities_pressed[ability]=True
         inputs.prev_key = key
         return
@@ -215,6 +215,7 @@ class Player(arcade.Sprite):
             self.input_context.move_keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.move_keys_pressed).normalized()
 
     def dash(self):
+        print("called dash")
         self.cooldowns["DashState"].use()
         self.change_state(DashState(self, 0.10))
 
@@ -228,10 +229,12 @@ MOVE_MAP_PLAYER_1 = {
 
 KEY_MAP_PLAYER_1 = {
     arcade.key.SPACE: Player.shoot,
+    arcade.key.LSHIFT: Player.dash,
 }
 
 KEY_MAP_PLAYER_2 = {
-    arcade.key.COLON: Player.shoot,
+    arcade.key.PERIOD: Player.shoot,
+    arcade.key.MINUS: Player.dash,
 }
 
 MOVE_MAP_PLAYER_2 = {
