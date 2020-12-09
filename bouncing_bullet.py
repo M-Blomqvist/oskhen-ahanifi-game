@@ -38,6 +38,12 @@ class GameView(arcade.View):
         self.nonpassable = arcade.SpriteList()
         self.all_sprites = arcade.SpriteList()
 
+        self.environment_damage=5
+        self.damage_intervall=5
+        self.player_damage_timers= list()
+
+        # Physics engine currently only handles player-wall collisions
+        self.physics_engine = None
 
     def setup(self):
 
@@ -86,6 +92,9 @@ class GameView(arcade.View):
             player.physics_engine = arcade.PhysicsEngineSimple(
             player, self.nonpassable)
 
+        for _ in range(len(self.players)):
+            self.player_damage_timers.append(self.damage_intervall)
+
         # self.all_sprites.append(player1)
 
     def on_draw(self):
@@ -105,6 +114,8 @@ class GameView(arcade.View):
         self.players.draw()
 
     def on_update(self, delta_time):
+        for i in range(len(self.player_damage_timers)):
+            self.player_damage_timers[i]+=delta_time
 
         # Bullet bounces
         for bullet in self.bullets:
@@ -150,8 +161,9 @@ class GameView(arcade.View):
                 player.take_damage(10)
                 bullet.destroy()
 
-        for player in self.players:
-            if player.collides_with_list(self.deadly_list):
+        for i,player in enumerate(self.players):
+            if player.collides_with_list(self.deadly_list) and self.player_damage_timers[i]>self.damage_intervall:
+                self.player_damage_timers[i]=0
                 player.take_damage(10)
             
 
