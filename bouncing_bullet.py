@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from player import Player,Bullet,MOVE_MAP_PLAYER_1,MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1
+import logic
 
 
 
@@ -35,6 +35,7 @@ class GameView(arcade.View):
         self.wall_list = arcade.SpriteList()
         self.deadly_list = arcade.SpriteList()
         self.players = arcade.SpriteList()
+        self.nonpassable = arcade.SpriteList()
         self.all_sprites = arcade.SpriteList()
 
         self.environment_damage=5
@@ -71,28 +72,29 @@ class GameView(arcade.View):
             my_map, deadly_layer_name, TILE_SCALING)
 
         self.all_sprites.extend(self.deadly_list)
-        self.all_sprites.extend(self.floor_list)  # extend appends spriteList
+        self.all_sprites.extend(self.floor_list)  # extend appends spriteList #No it doesn't, it *extends* spriteList..
         self.all_sprites.extend(self.wall_list)
+        self.nonpassable.extend(self.wall_list)
 
         # Player setups
-        self.player1 = Player(self,"sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_1,KEY_MAP_PLAYER_1)
+
+        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1)
         self.player1.center_y = self.window.height / 2
         self.player1.left = 100
 
+        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2)
+        self.player2.center_y = self.window.height / 2
+        self.player2.left = self.window.width - 200
+
         self.players.append(self.player1)
+        self.players.append(self.player2)
+        self.nonpassable.append(self.player1)
+        self.nonpassable.append(self.player2)
 
-        
-        # self.player2 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1)
-        # self.player2.center_y = self.window.height / 2
-        # self.player2.left = 400
-
-        # self.players.append(self.player2)
-
-        # Player - wall Collisions
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player1, self.wall_list)
-        # self.physics_engine1=arcade.PhysicsEngineSimple(
-        #     self.player2, self.wall_list)
+        for player in self.players:
+            # Physics engine currently only handles player-wall collisions
+            player.physics_engine = arcade.PhysicsEngineSimple(
+            player, self.nonpassable)
 
         for _ in range(len(self.players)):
             self.player_damage_timers.append(self.damage_intervall)
@@ -172,11 +174,14 @@ class GameView(arcade.View):
         for player in self.players:
             player.update(delta_time)
 
-        hit_list = self.physics_engine.update()
-        if len(hit_list) > 0:
-            self.player1.collided = True
-        else:
-            self.player1.collided = False
+        for player in self.players:
+            hit_list = player.physics_engine.update()
+            if len(hit_list) > 0:
+                player.collided = True
+            else:
+                player.collided = False
+
+
 
         # self.physics_engine1.update()
         # if len(hit_list) > 0:
