@@ -4,10 +4,6 @@ import math
 from dataclasses import dataclass
 import time
 
-
-
-
-
 @dataclass
 class Cooldown():
     cooldown: float
@@ -48,7 +44,7 @@ class InputContext():
     key_map: dict()
     abilities_pressed: dict()
     prev_key: arcade.key = None
-    time_since_last: float = 0
+    time_prev_press: float = 0
 
 
 class DefaultState():
@@ -59,7 +55,7 @@ class DefaultState():
         if player.input_context.abilities_pressed[Player.shoot]==True:
             player.shoot()
         self.time_since_dmg += delta_time
-        player.input_context.time_since_last += delta_time
+        player.input_context.time_prev_press += delta_time
         player.change_x = player.move_direction.x*player.speed
         player.change_y = player.move_direction.y*player.speed
 
@@ -78,7 +74,7 @@ class DefaultState():
 
     def on_key_press(self, player, key):
         inputs=player.input_context
-        inputs.time_since_last = 0
+        inputs.time_prev_press = 0
         if key in inputs.move_map:
             inputs.move_keys_pressed[key] = True
             player.move_direction = sum(
@@ -123,7 +119,7 @@ class DashState(DefaultState):
 
     def update(self, player, delta_time):
         self.time_since_dashed += delta_time
-        player.input_context.time_since_last+=delta_time
+        player.input_context.time_prev_press+=delta_time
         if self.time_since_dashed > self.dash_time or player.collided:
             print("end dash")
             player.to_prev_state()

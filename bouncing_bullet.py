@@ -37,6 +37,10 @@ class GameView(arcade.View):
         self.players = arcade.SpriteList()
         self.all_sprites = arcade.SpriteList()
 
+        self.environment_damage=5
+        self.damage_intervall=5
+        self.player_damage_timers= list()
+
         # Physics engine currently only handles player-wall collisions
         self.physics_engine = None
 
@@ -77,6 +81,7 @@ class GameView(arcade.View):
 
         self.players.append(self.player1)
 
+        
         # self.player2 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1)
         # self.player2.center_y = self.window.height / 2
         # self.player2.left = 400
@@ -88,6 +93,9 @@ class GameView(arcade.View):
             self.player1, self.wall_list)
         # self.physics_engine1=arcade.PhysicsEngineSimple(
         #     self.player2, self.wall_list)
+
+        for _ in range(len(self.players)):
+            self.player_damage_timers.append(self.damage_intervall)
 
         # self.all_sprites.append(player1)
 
@@ -102,12 +110,14 @@ class GameView(arcade.View):
         offset_x=0
         for player in self.players:
             num_dashes = int(player.health/10)
-            text = f"|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'
+            text = f"HP:|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'
             arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
             offset_x+=300
         self.players.draw()
 
     def on_update(self, delta_time):
+        for i in range(len(self.player_damage_timers)):
+            self.player_damage_timers[i]+=delta_time
 
         # Bullet bounces
         for bullet in self.bullets:
@@ -153,8 +163,9 @@ class GameView(arcade.View):
                 player.take_damage(10)
                 bullet.destroy()
 
-        for player in self.players:
-            if player.collides_with_list(self.deadly_list):
+        for i,player in enumerate(self.players):
+            if player.collides_with_list(self.deadly_list) and self.player_damage_timers[i]>self.damage_intervall:
+                self.player_damage_timers[i]=0
                 player.take_damage(10)
             
 
