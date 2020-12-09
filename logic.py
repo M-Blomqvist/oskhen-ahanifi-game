@@ -21,7 +21,7 @@ class Cooldown():
         self.last_used=time.time()
 
 COOLDOWNS ={
-    "DashState": Cooldown(2),
+    "dash": Cooldown(2),
     "shoot":(Cooldown(0.5))
 } 
 
@@ -56,9 +56,9 @@ class DefaultState():
         self.time_since_dmg = 1000
 
     def update(self, player, delta_time):
-        for ability in player.input_context.abilities_pressed:
-            if player.input_context.abilities_pressed[ability] == True:
-                ability(player)
+
+        if player.input_context.abilities_pressed[Player.shoot]==True:
+            player.shoot()
 
         self.time_since_dmg += delta_time
         player.input_context.time_since_last += delta_time
@@ -95,6 +95,9 @@ class DefaultState():
         elif key in inputs.key_map:
             ability = inputs.key_map[key]
             inputs.abilities_pressed[ability]=True
+            if ability == Player.dash:
+                player.dash()
+
         inputs.prev_key = key
         return
 
@@ -115,7 +118,7 @@ class DefaultState():
 class DashState(DefaultState):
     def __init__(self, player, dash_time):
         super().__init__()
-        player.cooldowns["DashState"].last_used = time.time()
+        player.cooldowns["dash"].last_used = time.time()
         player.change_y = player.move_direction.y * player.speed*3
         player.change_x = player.move_direction.x * player.speed*3
         self.dash_time = dash_time
@@ -214,10 +217,10 @@ class Player(arcade.Sprite):
         self.move_direction = sum(
             self.input_context.move_keys_pressed[k] * self.input_context.move_map[k] for k in self.input_context.move_keys_pressed).normalized()
 
-    def dash(self):
-        print("called dash")
-        self.cooldowns["DashState"].use()
-        self.change_state(DashState(self, 0.10))
+    def dash(self): 
+        if self.cooldowns["dash"].ready():
+            self.cooldowns["dash"].use()
+            self.change_state(DashState(self, 0.10))
 
 
 MOVE_MAP_PLAYER_1 = {
