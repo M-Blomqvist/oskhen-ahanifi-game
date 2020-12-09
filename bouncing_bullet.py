@@ -72,13 +72,9 @@ class GameView(arcade.View):
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1)
-        self.player1.center_y = self.window.height / 2
-        self.player1.left = 100
+        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2)
 
-        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2)
-        self.player2.center_y = self.window.height / 2
-        self.player2.left = self.window.width - 200
+        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2)
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -103,7 +99,7 @@ class GameView(arcade.View):
         offset_x=0
         for player in self.players:
             num_dashes = int(player.health/10)
-            text = f"|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'
+            text = f"|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'+" "*3 + "X"*player.lives
             arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
             offset_x+=300
         self.players.draw()

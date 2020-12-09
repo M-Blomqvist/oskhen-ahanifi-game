@@ -31,7 +31,6 @@ class Bullet(arcade.Sprite):
         self.bounces = 0
         self.max_bounces = max_bounces
         self.speed = speed
-        #self.color = arcade.color.BRIGHT_GREEN
 
     def update(self):
         if self.bounces > self.max_bounces:
@@ -72,11 +71,12 @@ class DefaultState():
             player.health -= damage
             if player.health <= 0:
                 player.health = 0
-                print("I'm legally dead")
+                player.die()
 
             num_dashes = int(player.health/10)
             text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
             print(text)
+
 
     def on_key_press(self, player, key):
         inputs=player.input_context
@@ -148,14 +148,22 @@ class DashState(DefaultState):
         return
 
 class Player(arcade.Sprite):
-    def __init__(self,arcade, filename, scaling, MOVE_MAP,KEY_MAP, health=100, speed=5):
+    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, health=100, speed=5, lives=3):
         super().__init__(filename, scaling)
-        self.arcade=arcade
+        self.arcade = arcade
         self.speed = speed
+        self.maxhealth = health
         self.health = health
         self.collided = False
         self.move_direction = Vec2d(0, 0)
         self.facing_direction = Vec2d(1, 0)
+        self.lives = lives
+        self.start_x = start_x
+        self.start_y = start_y
+
+
+        self.center_x = self.start_x
+        self.center_y = self.start_y
 
         abilities_pressed=dict()
         for k in KEY_MAP:
@@ -200,6 +208,20 @@ class Player(arcade.Sprite):
 
             self.arcade.bullets.append(bullet)
             self.arcade.all_sprites.append(bullet)
+
+    def die(self):
+        self.lives -= 1
+
+        if self.lives > 0:
+            self.health = self.maxhealth
+            self.center_x = self.start_x
+            self.center_y = self.start_y
+
+        if self.lives == 0:
+            self.lose()
+        
+    def lose(self):
+        print("I'm legally dead!")
 
     def take_damage(self, damage):
         self.state.take_damage(player=self, damage=damage)
