@@ -70,11 +70,11 @@ class GameView(arcade.View):
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, KEY_MAP_PLAYER_1)
+        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1)
         self.player1.center_y = self.window.height / 2
         self.player1.left = 100
 
-        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, KEY_MAP_PLAYER_2)
+        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2)
         self.player2.center_y = self.window.height / 2
         self.player2.left = self.window.width - 200
 
@@ -85,23 +85,6 @@ class GameView(arcade.View):
             # Physics engine currently only handles player-wall collisions
             player.physics_engine = arcade.PhysicsEngineSimple(
             player, self.wall_list)
-
-
-
-<<<<<<< HEAD
-=======
-        # self.player2 = Player("sprites/duck_small.png", 0.2, MOVE_MAP_PLAYER_2,KEY_MAP_PLAYER_1)
-        # self.player2.center_y = self.window.height / 2
-        # self.player2.left = 400
-
-        # self.players.append(self.player2)
-
-        # Player - wall Collisions
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player1, self.wall_list)
-        # self.physics_engine1=arcade.PhysicsEngineSimple(
-        #     self.player2, self.wall_list)
->>>>>>> 17ca61cc68a74f46b7c089ee31e4baf36d572af5
 
         # self.all_sprites.append(player1)
 

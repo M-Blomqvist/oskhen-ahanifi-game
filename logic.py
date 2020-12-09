@@ -186,7 +186,7 @@ class Player(arcade.Sprite):
         
         if self.cooldowns["shoot"].ready():
             self.cooldowns["shoot"].use()
-            bullet = Bullet("./sprites/weapon_gun.png", 1, 4)
+            bullet = Bullet("./sprites/weapon_gun_purple.png", 1, 4)
             bullet.change_x = self.facing_direction.x * bullet.speed
             bullet.change_y = self.facing_direction.y * bullet.speed
 
@@ -228,6 +228,10 @@ MOVE_MAP_PLAYER_1 = {
 
 KEY_MAP_PLAYER_1 = {
     arcade.key.SPACE: Player.shoot,
+}
+
+KEY_MAP_PLAYER_2 = {
+    arcade.key.COLON: Player.shoot,
 }
 
 MOVE_MAP_PLAYER_2 = {
