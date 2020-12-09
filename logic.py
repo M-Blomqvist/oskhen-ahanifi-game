@@ -146,7 +146,8 @@ class SpawnState(DefaultState):
         return
 
 class Player(arcade.Sprite):
-    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, health=100, speed=5, lives=3):
+    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, health=100, speed=5, lives=3):
+        self.__name__ = name
         super().__init__(filename, scaling)
         self.arcade = arcade
         self.speed = speed
