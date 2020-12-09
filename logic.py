@@ -226,6 +226,7 @@ class Player(arcade.Sprite):
             self.health = self.maxhealth
             self.center_x = self.start_x
             self.center_y = self.start_y
+            self.change_state(SpawnState(player=self))
 
     def take_damage(self, damage):
         self.state.take_damage(player=self, damage=damage)
