@@ -49,30 +49,25 @@ class InputContext():
 
 class DefaultState():
     def __init__(self):
-        self.time_since_dmg = 1000
+        self
 
     def update(self, player, delta_time):
-
         if player.input_context.abilities_pressed[Player.shoot]==True:
             player.shoot()
 
-        self.time_since_dmg += delta_time
         player.input_context.time_prev_press += delta_time
         player.change_x = player.move_direction.x*player.speed
         player.change_y = player.move_direction.y*player.speed
 
     def take_damage(self, player, damage):
-        if self.time_since_dmg > 1:
-            
-            self.time_since_dmg = 0
-            player.health -= damage
-            if player.health <= 0:
-                player.health = 0
-                player.die()
+        player.health -= damage
+        if player.health <= 0:
+            player.health = 0
+            player.die()
 
-            num_dashes = int(player.health/10)
-            text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
-            print(text)
+        num_dashes = int(player.health/10)
+        text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
+        print(text)
 
 
     def on_key_press(self, player, key):
@@ -142,6 +137,12 @@ class DashState(DefaultState):
             inputs.move_keys_pressed[key] = False
         elif key in inputs.key_map:
             inputs.abilities_pressed[inputs.key_map[key]]=False
+        return
+
+class SpawnState(DefaultState):
+    def __init__(self):
+        self
+    def take_damage(self, player, damage):
         return
 
 class Player(arcade.Sprite):
