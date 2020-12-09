@@ -157,7 +157,8 @@ class SpawnState(DefaultState):
         return
 
 class Player(arcade.Sprite):
-    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, health=100, speed=5, lives=3):
+    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, health=100, speed=5, lives=3):
+        self.__name__ = name
         super().__init__(filename, scaling)
         self.arcade = arcade
         self.speed = speed
@@ -225,12 +226,6 @@ class Player(arcade.Sprite):
             self.health = self.maxhealth
             self.center_x = self.start_x
             self.center_y = self.start_y
-
-        if self.lives == 0:
-            self.lose()
-        
-    def lose(self):
-        print("I'm legally dead!")
 
     def take_damage(self, damage):
         self.state.take_damage(player=self, damage=damage)

@@ -78,9 +78,9 @@ class GameView(arcade.View):
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2)
+        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1")
 
-        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2)
+        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2")
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -99,7 +99,7 @@ class GameView(arcade.View):
 
     def on_draw(self):
         """Called whenever you need to draw your window
-        """
+        """     
 
         # Clear the screen and start drawing
         arcade.start_render()
@@ -114,6 +114,11 @@ class GameView(arcade.View):
         self.players.draw()
 
     def on_update(self, delta_time):
+
+        for player in self.players:
+            if player.lives == 0:
+                self.gameover(player)
+
         for i in range(len(self.player_damage_timers)):
             self.player_damage_timers[i]+=delta_time
 
@@ -186,8 +191,6 @@ class GameView(arcade.View):
         #     self.player2.collided = False
 
         self.all_sprites.update()
-        
-        
 
     def on_key_press(self, key, modifiers):
 
@@ -201,6 +204,10 @@ class GameView(arcade.View):
 
         for player in self.players:
             player.on_key_release(key, modifiers)
+    
+    def gameover(self, player):
+        gameover_view = GameOverView(player.__name__)
+        self.window.show_view(gameover_view)
 
 class MenuView(arcade.View):
 
@@ -231,13 +238,27 @@ class MenuView(arcade.View):
         if key == arcade.key.ENTER:
             if self.currentselection == 0:
                 game_view = GameView()
-                window.show_view(game_view)
                 game_view.setup()
                 self.window.show_view(game_view)
 
             elif self.currentselection == 2:
                 self.window.close()
         
+class GameOverView(arcade.View):
+
+    def __init__(self, playername):
+        super().__init__()
+        self.text = f"{playername} lost the game!"
+
+    def on_show(self):
+        arcade.set_background_color(arcade.color.RED_DEVIL)
+    
+    def on_draw(self):
+        arcade.start_render()
+        arcade.draw_text(self.text, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, font_size=50, anchor_x="center")
+    
+        
+
 
 # Main code entry point
 if __name__ == "__main__":
