@@ -86,7 +86,7 @@ class DefaultState():
             player.change_x = player.move_direction.x * player.speed
 
             if player.move_direction != Vec2d(0, 0):
-                player.facing_direction = player.move_direction
+                player.change_facing()
 
         elif key in inputs.key_map:
             ability = inputs.key_map[key]
@@ -107,7 +107,9 @@ class DefaultState():
             player.change_x = player.move_direction.x * player.speed
 
             if player.move_direction != Vec2d(0, 0):
-                player.facing_direction = player.move_direction
+                player.change_facing()
+
+                
         elif key in inputs.key_map:
             inputs.abilities_pressed[inputs.key_map[key]]=False
 
@@ -146,6 +148,12 @@ class DashState(DefaultState):
 class SpawnState(DefaultState):
     def __init__(self,player,max_invincible_time=3):
         self.time_invincible=max_invincible_time
+        player.facing_direction=player.spawn_direction
+        if player.spawn_direction.x<0:
+            player.texture=player.textures[1]
+        else:
+            player.texture=player.textures[0]
+        
         player.color=arcade.color.AERO_BLUE
         player.alpha=210
 
@@ -161,20 +169,29 @@ class SpawnState(DefaultState):
         return
 
 class Player(arcade.Sprite):
-    def __init__(self, arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, health=100, speed=5, lives=3):
+    def __init__(self, game_arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, spawn_direction,health=100, speed=5, lives=3):
         self.__name__ = name
         super().__init__(filename, scaling)
-        self.arcade = arcade
+        self.arcade = game_arcade
         self.speed = speed
         self.maxhealth = health
         self.health = health
         self.collided = False
         self.move_direction = Vec2d(0, 0)
-        self.facing_direction = Vec2d(1, 0)
+        self.facing_direction = spawn_direction
+        self.spawn_direction= spawn_direction
         self.lives = lives
         self.start_x = start_x
         self.start_y = start_y
 
+        self.textures = list()
+        texture = arcade.load_texture(filename)
+        self.textures.append(texture)
+        texture = arcade.load_texture(filename,flipped_horizontally=True)
+        self.textures.append(texture)
+
+        if self.spawn_direction.x<0:
+            self.texture=self.textures[1]
 
         self.center_x = self.start_x
         self.center_y = self.start_y
@@ -249,6 +266,13 @@ class Player(arcade.Sprite):
         if self.cooldowns["dash"].ready():
             self.cooldowns["dash"].use()
             self.change_state(DashState(self, 0.10))
+
+    def change_facing(self):
+        self.facing_direction=self.move_direction
+        if self.move_direction.x>0:
+            self.set_texture(0)
+        elif self.move_direction.x<0:
+            self.set_texture(1)
 
 
 MOVE_MAP_PLAYER_1 = {
