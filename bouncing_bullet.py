@@ -35,6 +35,7 @@ class GameView(arcade.View):
         self.wall_list = arcade.SpriteList()
         self.deadly_list = arcade.SpriteList()
         self.players = arcade.SpriteList()
+        self.nonpassable = arcade.SpriteList()
         self.all_sprites = arcade.SpriteList()
 
 
@@ -65,8 +66,9 @@ class GameView(arcade.View):
             my_map, deadly_layer_name, TILE_SCALING)
 
         self.all_sprites.extend(self.deadly_list)
-        self.all_sprites.extend(self.floor_list)  # extend appends spriteList
+        self.all_sprites.extend(self.floor_list)  # extend appends spriteList #No it doesn't, it *extends* spriteList..
         self.all_sprites.extend(self.wall_list)
+        self.nonpassable.extend(self.wall_list)
 
         # Player setups
 
@@ -80,11 +82,13 @@ class GameView(arcade.View):
 
         self.players.append(self.player1)
         self.players.append(self.player2)
+        self.nonpassable.append(self.player1)
+        self.nonpassable.append(self.player2)
 
         for player in self.players:
             # Physics engine currently only handles player-wall collisions
             player.physics_engine = arcade.PhysicsEngineSimple(
-            player, self.wall_list)
+            player, self.nonpassable)
 
         # self.all_sprites.append(player1)
 
