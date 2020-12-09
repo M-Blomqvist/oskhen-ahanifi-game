@@ -99,7 +99,7 @@ class GameView(arcade.View):
 
     def on_draw(self):
         """Called whenever you need to draw your window
-        """
+        """     
 
         # Clear the screen and start drawing
         arcade.start_render()
@@ -112,6 +112,11 @@ class GameView(arcade.View):
             arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
             offset_x+=300
         self.players.draw()
+
+        for player in self.players:
+            if player.lives == 0:
+                text = f"{player.__name__} Lost!"
+                arcade.draw_text(text, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.RED_DEVIL, font_size=50, anchor_x="center")
 
     def on_update(self, delta_time):
         for i in range(len(self.player_damage_timers)):
@@ -186,8 +191,6 @@ class GameView(arcade.View):
         #     self.player2.collided = False
 
         self.all_sprites.update()
-        
-        
 
     def on_key_press(self, key, modifiers):
 

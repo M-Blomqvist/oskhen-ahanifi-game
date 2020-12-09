@@ -214,12 +214,6 @@ class Player(arcade.Sprite):
             self.center_x = self.start_x
             self.center_y = self.start_y
 
-        if self.lives == 0:
-            self.lose()
-        
-    def lose(self):
-        print("I'm legally dead!")
-
     def take_damage(self, damage):
         self.state.take_damage(player=self, damage=damage)
 
