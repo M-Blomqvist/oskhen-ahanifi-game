@@ -256,9 +256,25 @@ class GameOverView(arcade.View):
     def on_draw(self):
         arcade.start_render()
         arcade.draw_text(self.text, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, font_size=50, anchor_x="center")
-    
+        arcade.draw_text("Press R to play again", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press M to go to main menu", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150, arcade.color.WHITE, font_size=20, anchor_x="center")
+        arcade.draw_text("Press Q to quit", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 200, arcade.color.WHITE, font_size=20, anchor_x="center")
         
+    def on_key_press(self, key, modifiers):
 
+        arcade.set_background_color(arcade.color.BLACK)
+
+        if key == arcade.key.Q:
+            self.window.close()
+        
+        if key == arcade.key.M:
+            start_view = MenuView()
+            window.show_view(start_view)
+        
+        if key == arcade.key.R:
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
 
 # Main code entry point
 if __name__ == "__main__":
