@@ -72,8 +72,8 @@ class DefaultState():
 
     def on_key_press(self, player, key):
 
-            # Dev testing
-        if key == arcade.key.K:
+        # Dev testing
+        if key == arcade.key.U:
             player.die()
 
         if key == arcade.key.T:
