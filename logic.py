@@ -25,6 +25,7 @@ COOLDOWNS ={
 class Bullet(arcade.Sprite):
     def __init__(self, filename, scaling, max_bounces, speed=7):
         super().__init__(filename, scaling)
+        self.name = "bill"
         self.bounces = 0
         self.max_bounces = max_bounces
         self.speed = speed
@@ -208,7 +209,7 @@ class SpawnState(DefaultState):
 
 class Player(arcade.Sprite):
     def __init__(self, game_arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, spawn_direction,health=100, speed=5, lives=3):
-        self.__name__ = name
+        self.name = name
         super().__init__(filename, scaling)
         self.arcade = game_arcade
         self.speed = speed
