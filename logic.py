@@ -49,6 +49,7 @@ class InputContext():
 
 class DefaultState():
     def __init__(self):
+        self.damageable=True
         return
 
     def update(self, player, delta_time):
@@ -60,14 +61,15 @@ class DefaultState():
         player.change_y = player.move_direction.y*player.speed
 
     def take_damage(self, player, damage):
-        player.health -= damage
-        if player.health <= 0:
-            player.health = 0
-            player.die()
+        if self.damageable:
+            player.health -= damage
+            if player.health <= 0:
+                player.health = 0
+                player.die()
 
-        num_dashes = int(player.health/10)
-        text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
-        print(text)
+            num_dashes = int(player.health/10)
+            text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
+            print(text)
 
 
     def on_key_press(self, player, key):
@@ -167,6 +169,35 @@ class SpawnState(DefaultState):
 
     def take_damage(self, player, damage):
         return
+
+    def on_key_press(self, player, key):
+        inputs=player.input_context
+        inputs.time_prev_press = 0
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = True
+            player.move_direction = sum(
+                inputs.move_keys_pressed[k] * inputs.move_map[k] for k in inputs.move_keys_pressed).normalized()
+
+            player.change_y = player.move_direction.y * player.speed
+            player.change_x = player.move_direction.x * player.speed
+
+            if player.move_direction != Vec2d(0, 0):
+                player.change_facing()
+
+        
+
+    def on_key_release(self, player, key):
+        inputs=player.input_context
+        if key in inputs.move_map:
+            inputs.move_keys_pressed[key] = False
+            player.move_direction = sum(
+                inputs.move_keys_pressed[k] * inputs.move_map[k] for k in inputs.move_keys_pressed).normalized()
+            player.change_y = player.move_direction.y * player.speed
+            player.change_x = player.move_direction.x * player.speed
+
+            if player.move_direction != Vec2d(0, 0):
+                player.change_facing()
+
 
 class Player(arcade.Sprite):
     def __init__(self, game_arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, spawn_direction,health=100, speed=5, lives=3):

@@ -47,40 +47,13 @@ class GameView(arcade.View):
 
     def setup(self):
 
-        # --- Load in a map from the tiled editor ---
-
-        # Name of map file to load
-        map_name = "./maps/map_2/map.tmx"
-        # Name of the layer in the file that has our platforms/walls
-        walls_layer_name = 'walls'
-        # Name of the layer that has floor
-        floor_layer_name = 'floor'
-        # Name of the layer that has deadly tiles
-        deadly_layer_name = "toxic"
-
-        my_map = arcade.tilemap.read_tmx(map_name)
-        self.wall_list = arcade.tilemap.process_layer(map_object=my_map,
-                                                      layer_name=walls_layer_name,
-                                                      scaling=TILE_SCALING,
-                                                      use_spatial_hash=True)
-
-        #-- Floor
-        self.floor_list = arcade.tilemap.process_layer(
-            my_map, floor_layer_name, TILE_SCALING)
-        #-- Deadly
-        self.deadly_list = arcade.tilemap.process_layer(
-            my_map, deadly_layer_name, TILE_SCALING)
-
-        self.all_sprites.extend(self.deadly_list)
-        self.all_sprites.extend(self.floor_list)  # extend appends spriteList #No it doesn't, it *extends* spriteList..
-        self.all_sprites.extend(self.wall_list)
-        self.nonpassable.extend(self.wall_list)
+        self.setup_map("./maps/map_2/map.tmx")
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_small.png", 0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1",Vec2d(1,0))
+        self.player1 = logic.Player(self, "sprites/duck_pixel.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1",Vec2d(1,0))
 
-        self.player2 = logic.Player(self, "sprites/duck_small_red.png", 0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0))
+        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0))
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -166,10 +139,12 @@ class GameView(arcade.View):
                 player.take_damage(10)
                 bullet.destroy()
 
+        #Environmental Damage
         for i,player in enumerate(self.players):
-            if player.collides_with_list(self.deadly_list) and self.player_damage_timers[i]>self.damage_intervall:
-                self.player_damage_timers[i]=0
-                player.take_damage(10)
+            if self.player_damage_timers[i]>self.damage_intervall:
+                if player.collides_with_list(self.deadly_list):
+                    self.player_damage_timers[i]=0
+                    player.take_damage(10)
             
 
         for player in self.players:
@@ -189,21 +164,49 @@ class GameView(arcade.View):
         #     self.player2.collided = True
         # else:
         #     self.player2.collided = False
+        
 
         self.all_sprites.update()
 
     def on_key_press(self, key, modifiers):
 
         for player in self.players:
-            sprite = player.on_key_press(key, modifiers)
-            if sprite != None:
-                self.bullets.append(sprite)
-                self.all_sprites.append(sprite)
+            player.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
 
         for player in self.players:
             player.on_key_release(key, modifiers)
+
+    def setup_map(self,map_path):
+        # --- Load in a map from the tiled editor ---
+
+        # Name of map file to load
+        map_name = map_path
+        # Name of the layer in the file that has our platforms/walls
+        walls_layer_name = 'walls'
+        # Name of the layer that has floor
+        floor_layer_name = 'floor'
+        # Name of the layer that has deadly tiles
+        deadly_layer_name = "toxic"
+
+        my_map = arcade.tilemap.read_tmx(map_name)
+        self.wall_list = arcade.tilemap.process_layer(map_object=my_map,
+                                                      layer_name=walls_layer_name,
+                                                      scaling=TILE_SCALING,
+                                                      use_spatial_hash=True)
+
+        #-- Floor
+        self.floor_list = arcade.tilemap.process_layer(
+            my_map, floor_layer_name, TILE_SCALING)
+        #-- Deadly
+        self.deadly_list = arcade.tilemap.process_layer(
+            my_map, deadly_layer_name, TILE_SCALING)
+
+        self.all_sprites.extend(self.deadly_list)
+        self.all_sprites.extend(self.floor_list)  # extend appends spriteList #No it doesn't, it *extends* spriteList..
+        self.all_sprites.extend(self.wall_list)
+        self.nonpassable.extend(self.wall_list)
     
     def gameover(self, player):
         gameover_view = GameOverView(player.__name__)
