@@ -125,6 +125,9 @@ class GameView(arcade.View):
             offset_x+=300
         self.players.draw()
 
+    def get_observation(self):
+        return self.boardstate
+
     def on_update(self, delta_time):
 
         for spritelist in self.fg_sprites:
