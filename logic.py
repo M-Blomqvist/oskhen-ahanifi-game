@@ -329,7 +329,7 @@ KEY_MAP_PLAYER_1 = {
 }
 
 KEY_MAP_PLAYER_2 = {
-    arcade.key.PERIOD:"shoot",
+    arcade.key.PERIOD: "shoot",
     arcade.key.MINUS: "dash",
 }
 

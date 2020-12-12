@@ -17,8 +17,8 @@ def parsefile(filename):
     }
 
     actionmapping = {
-        "Shoot" : Player.shoot,
-        "Dash" : Player.dash,
+        "Shoot" : "shoot",
+        "Dash" : "dash",
     }
 
     returndict = dict()
@@ -36,6 +36,7 @@ def parsefile(filename):
 
         settingmapping = setting.split(" = ")
         
+        ## Eval dangerous
         if "key" in settingmapping[0]:
             keytype = settingmapping[0].split("_")[2]
             maptype = eval(keytype + "mapping")
