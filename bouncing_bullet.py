@@ -161,7 +161,7 @@ class GameView(arcade.View):
                     player.on_key_press(key,None)
 
             self.player_damage_timers[i]+=delta_time
-            
+
 
         # Bullet bounces
         for bullet in self.bullets:
@@ -313,8 +313,6 @@ class GameOverView(arcade.View):
 # Main code entry point
 if __name__ == "__main__":
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    start_view = GameView()
-    start_view.setup()
-
+    start_view = MenuView()
     window.show_view(start_view)
     arcade.run()
