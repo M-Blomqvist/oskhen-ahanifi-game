@@ -7,6 +7,7 @@ from typing import List
 
 import logic
 import ai_interface
+import parseconf
 
 
 
@@ -53,6 +54,11 @@ class GameView(arcade.View):
 
         self.bg_sprites = [["walls", self.wall_list], ["floor", self.floor_list], ["deadly", self.deadly_list]]
         self.fg_sprites = [self.bullets, self.players]
+
+        ## Parse Config File
+
+        settings = parseconf.parsefile("config.cfg")
+        
 
         # Player setups
 
