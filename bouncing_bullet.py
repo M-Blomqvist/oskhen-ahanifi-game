@@ -1,13 +1,11 @@
 import arcade
 import math
-from pymunk.vec2d import Vec2d
 import time
-
+from pymunk.vec2d import Vec2d
 from dataclasses import dataclass
 from typing import List
 
 import logic
-
 import ai_interface
 
 
@@ -48,6 +46,7 @@ class GameView(arcade.View):
         # Physics engine currently only handles player-wall collisions
         self.physics_engine = None
 
+
     def setup(self):
 
         self.setup_map("./maps/map_2/map.tmx")
@@ -62,7 +61,7 @@ class GameView(arcade.View):
         self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0),is_ai=True)
 
         self.ai=ai_interface.Agent(ai_interface.AI_KEYMAP_2,"./ai.py")
-        self.ai.set_observation(self.boardstate)
+        self.ai.observation=self.boardstate
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -82,7 +81,10 @@ class GameView(arcade.View):
         for spritelist in self.bg_sprites:
             for sprite in spritelist[1]:
                 x = [int(i * COORDINATE_MAPPING) for i in sprite.position]
-                self.boardstate[x[0]][x[1]][0] = spritelist[0]         
+                self.boardstate[x[0]][x[1]][0] = spritelist[0]  
+
+        
+               
 
     def setup_map(self,map_path):
         # --- Load in a map from the tiled editor ---
@@ -97,17 +99,20 @@ class GameView(arcade.View):
         deadly_layer_name = "toxic"
 
         my_map = arcade.tilemap.read_tmx(map_name)
-        self.wall_list = arcade.tilemap.process_layer(map_object=my_map,
+        self.wall_list=arcade.SpriteList(is_static=True,use_spatial_hash=True)
+        self.wall_list.extend( arcade.tilemap.process_layer(map_object=my_map,
                                                       layer_name=walls_layer_name,
                                                       scaling=TILE_SCALING,
-                                                      use_spatial_hash=True)
+                                                      use_spatial_hash=True))
 
         #-- Floor
-        self.floor_list = arcade.tilemap.process_layer(
-            my_map, floor_layer_name, TILE_SCALING)
+        self.floor_list=arcade.SpriteList(is_static=True)
+        self.floor_list.extend(arcade.tilemap.process_layer(
+            my_map, floor_layer_name, TILE_SCALING))
         #-- Deadly
-        self.deadly_list = arcade.tilemap.process_layer(
-            my_map, deadly_layer_name, TILE_SCALING)
+        self.deadly_list=arcade.SpriteList(is_static=True,use_spatial_hash=True)
+        self.deadly_list.extend(arcade.tilemap.process_layer(
+            my_map, deadly_layer_name, TILE_SCALING))
 
         self.all_sprites.extend(self.deadly_list)
         self.all_sprites.extend(self.floor_list)  # extend appends spriteList #No it doesn't, it *extends* spriteList..
@@ -117,10 +122,12 @@ class GameView(arcade.View):
     def on_draw(self):
         """Called whenever you need to draw your window
         """     
-
         # Clear the screen and start drawing
         arcade.start_render()
-        self.all_sprites.draw()
+        self.floor_list.draw()
+        self.deadly_list.draw()
+        self.wall_list.draw()
+        self.players.draw()
         self.bullets.draw()
         offset_x=0
         for player in self.players:
@@ -129,6 +136,7 @@ class GameView(arcade.View):
             arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
             offset_x+=300
         self.players.draw()
+
 
     def get_observation(self):
         return self.boardstate
@@ -140,14 +148,10 @@ class GameView(arcade.View):
                 x = [int(i * COORDINATE_MAPPING) for i in sprite.position]
                 self.boardstate[x[0]][x[1]][0] = sprite.name    
 
-        for player in self.players:
+        for i,player in enumerate(self.players):
             if player.lives == 0:
                 self.gameover(player)
 
-        for i in range(len(self.player_damage_timers)):
-            self.player_damage_timers[i]+=delta_time
-
-        for i,player in enumerate(self.players):
             if player.is_ai:
                 inputs=player.input_context
                 inputs.move_keys_pressed=inputs.move_keys_pressed.fromkeys(inputs.move_keys_pressed,False)
@@ -155,6 +159,9 @@ class GameView(arcade.View):
                 keys=self.ai.predict()
                 for key in keys:
                     player.on_key_press(key,None)
+
+            self.player_damage_timers[i]+=delta_time
+            
 
         # Bullet bounces
         for bullet in self.bullets:
@@ -194,11 +201,14 @@ class GameView(arcade.View):
             if bounced == True:
                 angle = math.atan2(bullet.change_y, bullet.change_x)
                 bullet.angle = math.degrees(angle)
+                bullet.update()
+                
 
-            players_hit=arcade.check_for_collision_with_list(bullet,self.players)
-            for player in players_hit:
-                player.take_damage(10)
-                bullet.destroy()
+            else:
+                players_hit=arcade.check_for_collision_with_list(bullet,self.players)
+                for player in players_hit:
+                    player.take_damage(10)
+                    bullet.destroy()
 
         #Environmental Damage
         for i,player in enumerate(self.players):
@@ -217,26 +227,14 @@ class GameView(arcade.View):
                 player.collided = True
             else:
                 player.collided = False
-
-
-
-        # self.physics_engine1.update()
-        # if len(hit_list) > 0:
-        #     self.player2.collided = True
-        # else:
-        #     self.player2.collided = False
         
 
-        self.all_sprites.update()
-
     def on_key_press(self, key, modifiers):
-
         for player in self.players:
             if not player.is_ai:
                 player.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
-
         for player in self.players:
             if not player.is_ai:
                 player.on_key_release(key, modifiers)
@@ -259,8 +257,8 @@ class MenuView(arcade.View):
         
     
     def on_draw(self):
-        arcade.start_render()
         
+        arcade.start_render()
         self.screenlist[self.currentselection].draw_sized(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT)
 
     def on_key_press(self, key, modifiers):
@@ -315,6 +313,8 @@ class GameOverView(arcade.View):
 # Main code entry point
 if __name__ == "__main__":
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    start_view = MenuView()
+    start_view = GameView()
+    start_view.setup()
+
     window.show_view(start_view)
     arcade.run()
