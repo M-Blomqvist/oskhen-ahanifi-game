@@ -61,9 +61,9 @@ class GameView(arcade.View):
 
         # Player setups
 
-        self.player1 = logic.Player(self, "sprites/duck_pixel.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1",Vec2d(1,0))
+        self.player1 = logic.Player(self, "sprites/duck_pixel.png", TILE_SCALING -0.2, settings["p1_movement"], settings["p1_action"], 100, self.window.height / 2, settings["p1_name"] ,Vec2d(1,0))
 
-        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0),is_ai=True)
+        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, settings["p2_movement"], settings["p2_action"], self.window.width - 200, self.window.height / 2, settings["p2_name"] ,Vec2d(-1,0),is_ai=True)
 
         self.ai=ai_interface.Agent("./ai.py",self.player2)
         self.ai.observation=self.boardstate
