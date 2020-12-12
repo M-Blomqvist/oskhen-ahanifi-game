@@ -63,10 +63,22 @@ class GameView(arcade.View):
 
         self.player1 = logic.Player(self, "sprites/duck_pixel.png", TILE_SCALING -0.2, settings["p1_movement"], settings["p1_action"], 100, self.window.height / 2, settings["p1_name"] ,Vec2d(1,0))
 
-        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, settings["p2_movement"], settings["p2_action"], self.window.width - 200, self.window.height / 2, settings["p2_name"] ,Vec2d(-1,0),is_ai=True)
+        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, settings["p2_movement"], settings["p2_action"], self.window.width - 200, self.window.height / 2, settings["p2_name"] ,Vec2d(-1,0))
 
-        self.ai=ai_interface.Agent("./ai.py",self.player2)
-        self.ai.observation=self.boardstate
+        self.agents=list()
+        mode= settings["mode"]
+        if mode!="PvP":
+            self.player2.is_ai=True
+            agent=ai_interface.Agent(settings["p2_ai"],self.player2)
+            agent.observation=self.boardstate
+            self.agents.append(agent)
+            if mode == "EvE":
+                self.player1.is_ai=True
+                agent=ai_interface.Agent(settings["p1_ai"],self.player1)
+                agent.observation=self.boardstate
+                self.agents.append(agent)
+
+
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -157,15 +169,16 @@ class GameView(arcade.View):
             if player.lives == 0:
                 self.gameover(player)
 
-            if player.is_ai:
-                inputs=player.input_context
-                inputs.move_keys_pressed=inputs.move_keys_pressed.fromkeys(inputs.move_keys_pressed,False)
-                inputs.abilities_pressed=inputs.abilities_pressed.fromkeys(inputs.abilities_pressed,False)
-                keys=self.ai.predict()
-                for key in keys:
-                    player.on_key_press(key,None)
-
             self.player_damage_timers[i]+=delta_time
+
+        for agent in self.agents:
+            inputs=agent.player.input_context
+            inputs.move_keys_pressed=inputs.move_keys_pressed.fromkeys(inputs.move_keys_pressed,False)
+            inputs.abilities_pressed=inputs.abilities_pressed.fromkeys(inputs.abilities_pressed,False)
+            keys=agent.predict()
+            for key in keys:
+                agent.player.on_key_press(key,None)
+
 
 
         # Bullet bounces
