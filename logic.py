@@ -208,7 +208,7 @@ class SpawnState(DefaultState):
 
 
 class Player(arcade.Sprite):
-    def __init__(self, game_arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, spawn_direction,health=100, speed=5, lives=3):
+    def __init__(self, game_arcade, filename, scaling, MOVE_MAP, KEY_MAP, start_x, start_y, name, spawn_direction,health=100, speed=5, lives=3,is_ai=False):
         self.name = name
         super().__init__(filename, scaling)
         self.arcade = game_arcade
@@ -222,6 +222,8 @@ class Player(arcade.Sprite):
         self.lives = lives
         self.start_x = start_x
         self.start_y = start_y
+
+        self.is_ai=is_ai
 
         self.textures = list()
         texture = arcade.load_texture(filename)

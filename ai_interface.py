@@ -2,6 +2,8 @@ import arcade
 import logic
 import importlib.util
 import numpy as np
+import random
+
 
 
 AI_KEYMAP_1={
@@ -31,11 +33,23 @@ AI_KEYMAP_2={
 }
 
 
+class MultiDiscrete():
+    def __init__(self,nvec):
+        self.rng=np.random.default_rng()
+        self.nvec=nvec
+    def sample(self):
+        self.rng.random()
+        actions=list()
+        for i,value in enumerate(self.nvec):
+            actions.append((i,random.randint(0,value-1)))
+
+        return actions
 class Agent():
     def __init__(self,action_key_map,ai_script):
         self.ai_module=self.load_module(ai_script)
         self.action_key_map=action_key_map
-        self.action_space=[3,3,2,2]
+        #self.action_space=[3,3,2,2]
+        self.action_space= MultiDiscrete([3,3,2,2])
         self.get_action_key
 
     def set_observation(self,observation):
@@ -50,7 +64,6 @@ class Agent():
         return keys
 
     def predict(self):
-        
         actions=self.ai_module.predict(self.observation,self.action_space)
         return self.get_action_key(actions)
         
@@ -63,3 +76,6 @@ class Agent():
 
 
 
+if __name__ == "__main__":
+    agent=Agent(AI_KEYMAP_1,"./ai.py")
+    print(agent.action_space.sample())

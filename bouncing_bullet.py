@@ -8,6 +8,8 @@ from typing import List
 
 import logic
 
+import ai_interface
+
 
 
 SCREEN_WIDTH = 1400
@@ -57,7 +59,10 @@ class GameView(arcade.View):
 
         self.player1 = logic.Player(self, "sprites/duck_pixel.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_1, logic.KEY_MAP_PLAYER_1, 100, self.window.height / 2, "Player 1",Vec2d(1,0))
 
-        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0))
+        self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0),is_ai=True)
+
+        self.ai=ai_interface.Agent(ai_interface.AI_KEYMAP_2,"./ai.py")
+        self.ai.set_observation(self.boardstate)
 
         self.players.append(self.player1)
         self.players.append(self.player2)
@@ -142,6 +147,15 @@ class GameView(arcade.View):
         for i in range(len(self.player_damage_timers)):
             self.player_damage_timers[i]+=delta_time
 
+        for i,player in enumerate(self.players):
+            if player.is_ai:
+                inputs=player.input_context
+                inputs.move_keys_pressed=inputs.move_keys_pressed.fromkeys(inputs.move_keys_pressed,False)
+                inputs.abilities_pressed=inputs.abilities_pressed.fromkeys(inputs.abilities_pressed,False)
+                keys=self.ai.predict()
+                for key in keys:
+                    player.on_key_press(key,None)
+
         # Bullet bounces
         for bullet in self.bullets:
             bounced = False
@@ -218,12 +232,14 @@ class GameView(arcade.View):
     def on_key_press(self, key, modifiers):
 
         for player in self.players:
-            player.on_key_press(key, modifiers)
+            if not player.is_ai:
+                player.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
 
         for player in self.players:
-            player.on_key_release(key, modifiers)
+            if not player.is_ai:
+                player.on_key_release(key, modifiers)
     
     def gameover(self, player):
         gameover_view = GameOverView(player.name)
