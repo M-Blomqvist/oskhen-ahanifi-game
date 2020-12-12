@@ -3,6 +3,7 @@ import logic
 import importlib.util
 import numpy as np
 import random
+from pymunk import Vec2d
 
 
 
@@ -32,6 +33,15 @@ AI_KEYMAP_2={
   (3,1) : arcade.key.MINUS,  # key for dash
 }
 
+Value_To_Action={
+    Vec2d(0, 1).int_tuple :(1,1),
+    Vec2d(0, -1).int_tuple:(1,2),
+    Vec2d(-1, 0).int_tuple:(0,1),
+    Vec2d(1, 0).int_tuple:(0,2),
+    "shoot":(2,1),
+    "dash":(3,1),
+}
+
 
 class MultiDiscrete():
     def __init__(self,nvec):
@@ -45,12 +55,11 @@ class MultiDiscrete():
 
         return actions
 class Agent():
-    def __init__(self,action_key_map,ai_script):
+    def __init__(self,ai_script,player):
+        self.player=player
         self.ai_module=self.load_module(ai_script)
-        self.action_key_map=action_key_map
-        #self.action_space=[3,3,2,2]
         self.action_space= MultiDiscrete([3,3,2,2])
-        self.get_action_key
+        self.action_key_map=self.generate_action_keymap(player)
 
     def set_observation(self,observation):
         self.observation=observation
@@ -74,8 +83,24 @@ class Agent():
         spec.loader.exec_module(ai_module)
         return ai_module
 
+    def generate_action_keymap(self,player):
+        dict={}
+
+        for key,value in player.input_context.move_map.items():
+            action=Value_To_Action[value.int_tuple]
+            dict[action]=key
+        for key,value in player.input_context.key_map.items():
+            action=Value_To_Action[value]
+            dict[action]=key
+
+        for i in range(len(self.action_space.nvec)):
+            dict[(i,0)]=None
+
+        return dict
+ 
 
 
 if __name__ == "__main__":
-    agent=Agent(AI_KEYMAP_1,"./ai.py")
-    print(agent.action_space.sample())
+    ...
+    # agent=Agent(AI_KEYMAP_1,"./ai.py")
+    # print(agent.action_space.sample())
