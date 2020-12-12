@@ -21,6 +21,7 @@ def parsefile(filename):
         "Dash" : Player.dash,
     }
 
+    returndict = dict()
     p1_move_keys = dict()
     p2_move_keys = dict()
     p1_action_keys = dict()
@@ -57,7 +58,19 @@ def parsefile(filename):
         elif settingmapping[0] == "P2":
             p2_name = settingmapping[1]
     
-    return [ai_settings, p1_name, p1_move_keys, p1_action_keys, p1_ai_path, p2_name, p2_move_keys, p2_action_keys, p2_ai_path]
+    returndict = {
+        "mode" : ai_settings,
+        "p1_name" : p1_name,
+        "p2_name" : p2_name,
+        "p1_movement" : p1_move_keys,
+        "p2_movement" : p2_move_keys,
+        "p1_action" : p1_action_keys,
+        "p2_action" : p2_action_keys,
+        "p1_ai" : p1_ai_path,
+        "p2_ai" : p2_ai_path,
+    }
+    
+    return returndict
 
                 
 
