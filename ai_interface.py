@@ -6,34 +6,7 @@ import random
 from pymunk import Vec2d
 
 
-
-AI_KEYMAP_1={
-  (0,0) : None,
-  (0,1) : arcade.key.A, # key for left
-  (0,2) : arcade.key.D, # key for right
-  (1,0) : None,
-  (1,1) : arcade.key.W, # key for up
-  (1,2) : arcade.key.S, # key for down
-  (2,0) : None,
-  (2,1) : arcade.key.SPACE, # key for shoot
-  (3,0) : None,
-  (3,1) : arcade.key.LSHIFT, # key for dash
-}
-
-AI_KEYMAP_2={
-  (0,0) : None,
-  (0,1) : arcade.key.J, # key for left
-  (0,2) : arcade.key.L, # key for right
-  (1,0) : None,         
-  (1,1) : arcade.key.I, # key for up
-  (1,2) : arcade.key.K, # key for down
-  (2,0) : None,
-  (2,1) : arcade.key.PERIOD, # key for shoot
-  (3,0) : None,
-  (3,1) : arcade.key.MINUS,  # key for dash
-}
-
-Value_To_Action={
+VALUE_TO_ACTION={
     Vec2d(0, 1).int_tuple :(1,1),
     Vec2d(0, -1).int_tuple:(1,2),
     Vec2d(-1, 0).int_tuple:(0,1),
@@ -87,10 +60,10 @@ class Agent():
         dict={}
 
         for key,value in player.input_context.move_map.items():
-            action=Value_To_Action[value.int_tuple]
+            action=VALUE_TO_ACTION[value.int_tuple]
             dict[action]=key
         for key,value in player.input_context.key_map.items():
-            action=Value_To_Action[value]
+            action=VALUE_TO_ACTION[value]
             dict[action]=key
 
         for i in range(len(self.action_space.nvec)):
