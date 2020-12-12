@@ -60,7 +60,7 @@ class GameView(arcade.View):
 
         self.player2 = logic.Player(self, "sprites/duck_pixel_red.png", TILE_SCALING -0.2, logic.MOVE_MAP_PLAYER_2, logic.KEY_MAP_PLAYER_2, self.window.width - 200, self.window.height / 2, "Player 2",Vec2d(-1,0),is_ai=True)
 
-        self.ai=ai_interface.Agent(ai_interface.AI_KEYMAP_2,"./ai.py")
+        self.ai=ai_interface.Agent("./ai.py",self.player2)
         self.ai.observation=self.boardstate
 
         self.players.append(self.player1)
@@ -257,7 +257,7 @@ class MenuView(arcade.View):
         
     
     def on_draw(self):
-        
+
         arcade.start_render()
         self.screenlist[self.currentselection].draw_sized(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT)
 

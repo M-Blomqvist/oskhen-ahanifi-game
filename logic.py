@@ -54,7 +54,7 @@ class DefaultState():
         return
 
     def update(self, player, delta_time):
-        if player.input_context.abilities_pressed[Player.shoot]==True:
+        if player.input_context.abilities_pressed["shoot"]==True:
             player.shoot()
 
         player.input_context.time_prev_press += delta_time
@@ -101,7 +101,7 @@ class DefaultState():
         elif key in inputs.key_map:
             ability = inputs.key_map[key]
             inputs.abilities_pressed[ability]=True
-            if ability == Player.dash:
+            if ability== "dash":
                 player.dash()
 
         inputs.prev_key = key
@@ -324,13 +324,13 @@ MOVE_MAP_PLAYER_1 = {
 }
 
 KEY_MAP_PLAYER_1 = {
-    arcade.key.SPACE: Player.shoot,
-    arcade.key.LSHIFT: Player.dash,
+    arcade.key.SPACE:"shoot",
+    arcade.key.LSHIFT: "dash",
 }
 
 KEY_MAP_PLAYER_2 = {
-    arcade.key.PERIOD: Player.shoot,
-    arcade.key.MINUS: Player.dash,
+    arcade.key.PERIOD:"shoot",
+    arcade.key.MINUS: "dash",
 }
 
 MOVE_MAP_PLAYER_2 = {
