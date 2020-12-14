@@ -21,7 +21,7 @@ COOLDOWNS ={
     "dash": Cooldown(2),
     "shoot":(Cooldown(0.5))
 } 
-
+  
 class Bullet(arcade.Sprite):
     def __init__(self, filename, scaling, max_bounces, speed=7):
         super().__init__(filename, scaling)
@@ -36,7 +36,6 @@ class Bullet(arcade.Sprite):
             
     def destroy(self):
         self.remove_from_sprite_lists()
-
 
 @dataclass
 class InputContext():
