@@ -163,7 +163,7 @@ class GameView(arcade.View):
         for spritelist in self.fg_sprites:
             for sprite in spritelist:
                 x = [int(i * COORDINATE_MAPPING) for i in sprite.position]
-                self.boardstate[x[0]][x[1]][0] = sprite.name    
+                self.boardstate[x[0]][x[1]][1] = sprite.name    
 
         for i,player in enumerate(self.players):
             if player.lives == 0:
