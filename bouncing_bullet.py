@@ -160,10 +160,14 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
 
+        for x in range(len(self.boardstate)):
+            for y in range(len(self.boardstate[0])):
+                self.boardstate[x][y][1] = ""
+
         for spritelist in self.fg_sprites:
             for sprite in spritelist:
                 x = [int(i * COORDINATE_MAPPING) for i in sprite.position]
-                self.boardstate[x[0]][x[1]][1] = sprite.name    
+                self.boardstate[x[0]][x[1]][1] = sprite.name
 
         for i,player in enumerate(self.players):
             if player.lives == 0:
