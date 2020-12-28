@@ -160,9 +160,7 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
 
-        for x in range(len(self.boardstate)):
-            for y in range(len(self.boardstate[0])):
-                self.boardstate[x][y][1] = ""
+        self.boardstate = [[[y[0], ""] for y in x] for x in self.boardstate]
 
         for spritelist in self.fg_sprites:
             for sprite in spritelist:
