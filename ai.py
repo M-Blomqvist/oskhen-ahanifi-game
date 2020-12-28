@@ -1,8 +1,3 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -17,22 +12,6 @@ STRING_VALUE_MAP = {
     "own_player": 3,
     "enemy_player": 4,
 }
-
-
-class Net(nn.Module):
-    def __init(self):
-        super(Net, self).__init__()
-        # input is 32x32 image 1 channel. Output is (32-3+1)x(32-3+1) in 6 channels
-        self.conv1 = nn.Conv2d(1, 6, 3)
-        # maxpool with 2x2 kernel gives 15x15
-        # input 15x15 6 channels. Output 13x13, 16 channels
-        self.conv2 = nn.Conv2d(6, 16, 3)
-        # maxpool with 2x2 kernel gives 6x6
-        self.conv3 = nn.Conv2d(16, 32, 3)
-        self.lin1 = nn.Linear(32*4*4, 100)
-        self.lin2 = nn.Linear(100, 50)
-        self.lin3 = nn.Linear(50, 10)
-
 
 def string_state_to_int_state(state):
     players_health = [0,0]
