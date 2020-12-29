@@ -1,9 +1,15 @@
 import numpy as np
 from matplotlib import pyplot as plt
+import parseconf
 
 # input 56x32x1
 
-PLAYER_NAME = "Luigi"
+## Dynamic names
+settings = parseconf.parsefile()
+
+P1_NAME = settings["p1_name"]
+P2_NAME = settings["p2_name"]
+PLAYER_NAME = P2_NAME
 
 STRING_VALUE_MAP = {
     "walls": 0,
@@ -19,13 +25,13 @@ def string_state_to_int_state(state):
     for i in range(np_state.shape[0]):
         for j in range(np_state.shape[1]):
             if state[i][j][1] != '':
-                if type(state[i][j][1]).__name__ != "Bullet":
-                    if state[i][j][1].name=="Mario":
+                if type(state[i][j][1]).__name__ != "Bill":
+                    if state[i][j][1].name==P1_NAME:
                         players_health[0]=state[i][j][1].health
                     else:
                         players_health[1]=state[i][j][1].health
                     np_state[i, j] = 5
-                elif type(state[i][j][1]).__name__ == "Bullet":
+                elif type(state[i][j][1]).__name__ == "Bill":
                     np_state[i, j] = 6
             else:
                 np_state[i, j] = STRING_VALUE_MAP[state[i][j][0]]
