@@ -27,6 +27,7 @@ class MultiDiscrete():
             actions.append((i,random.randint(0,value-1)))
 
         return actions
+
 class Agent():
     def __init__(self,ai_script,player):
         self.player=player
@@ -46,7 +47,7 @@ class Agent():
         return keys
 
     def predict(self):
-        actions=self.ai_module.predict(self.observation,self.action_space)
+        actions=self.ai_module.predict(self,self.observation,self.action_space)
         return self.get_action_key(actions)
         
 
