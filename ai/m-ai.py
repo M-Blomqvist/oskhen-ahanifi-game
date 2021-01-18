@@ -1,30 +1,36 @@
 # OBSERVATIONS: [[[terrain, player/bullet(bill)]; 32];56]
 # action_space: [0-2, 0-2, 0-1, 0-1] == [move_up/down/not y, move_right/left_notx, shoot/dont, dash/dont]
+from ai.const import *
+from collections import deque
 import json
 import numpy as np
 import tensorflow as tf
-import pytest
+import random
+# import pytest
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
 from tensorflow.keras.optimizers import SGD
 
-from collections import deque
 
-# parameters
-epsilon = .1  # exploration
-num_actions = 36  # four types of actions with three states each
-epoch = 100
-max_memory = 500
-hidden_size = 4000
-batch_size = 50
-grid_size = 52*32
-input_size = 3586
+# Network for both agents
 model = None
+network_loss = 0
 dictionary = None
+setup = True
 
 # Memory for batching and less over fitted AI
-# class ExperienceMemory
+experience_memory = deque(maxlen=MEMORY_SIZE)
+previous_s_a = (None, None)
+players_health = [None, None]
+p1_name = None
+
+# timestep for training
+time_step = 0
+
+# short-term memory for perception of time
+stacked_frames = deque([np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=np.int)
+                        for i in range(STACKED_FRAMES)], maxlen=4)
 
 # create NN
 
@@ -32,68 +38,113 @@ dictionary = None
 def network_setup():
     global model
     model = Sequential()
-    model.add(Dense(hidden_size, activation='relu'))
-    model.add(Dense(hidden_size, activation='relu'))
-    model.add(Dense(num_actions))
-    model.compile(SGD(lr=.2), "mse")
+    model.add(Conv2D(32, kernel_size=(8, 8), strides=(
+        4, 4), activation='relu', input_shape=(GRID_WIDTH, GRID_HEIGHT, INPUT_CHANNELS)))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(2, 2), padding='same'))
+    model.add(Conv2D(64, kernel_size=(4, 4), strides=(2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding='same'))
+    model.add(Flatten())
+    model.add(Dense(HIDDEN_LAYER, activation='relu'))
+    model.add(Dense(NUM_ACTIONS))
+    model.compile(loss='mse', optimizer='adam')
+
+
+"""  simple non-convolutional
+    model.add(Dense(HIDDEN_LAYER, activation='relu'))
+    model.add(Dense(HIDDEN_LAYER, activation='relu'))
+    model.add(Dense(NUM_ACTIONS))
+    model.compile(SGD(lr=LEARNING_RATE), "mse") """
 
 # observation preprocessing
 
+# process observation into int-state (0-6) 56x32 +return [own-health,enemy-health]
+
 
 def process_observtions(observation, player):
-    flat_obs = list()
-    for x in observation:
-        for e in x:
-
-            if e[0] == "walls":
-                first = 1
-            elif e[0] == "floor":
-                first = 0
-            elif e[0] == "deadly":
-                first = -1
-            if e[1] == '':
-                # empty tile
-                second = 0
-            else:
-                if e[1].name == player.name:
-                    second = 1
-                elif e[1].name == "Bill":
-                    first = -1
+    players_health = [0, 0]
+    np_state = np.zeros(
+        (len(observation), len(observation[0])), dtype=np.uint8)
+    for i in range(np_state.shape[0]):
+        for j in range(np_state.shape[1]):
+            if observation[i][j][1] != '':
+                if type(observation[i][j][1]).__name__ == "Bullet":
+                    np_state[i, j] = 6
                 else:
-                    second = -1
-            flat_obs.extend([first, second])
-    # add current health to observation
-    flat_obs.extend([player.health, player.lives])
-    return flat_obs
+                    if observation[i][j][1].name == p1_name:
+                        players_health[0] = observation[i][j][1].health
+                    else:
+                        players_health[1] = observation[i][j][1].health
+                    np_state[i, j] = 5
+            else:
+                np_state[i, j] = STRING_VALUE_MAP[observation[i][j][0]]
 
-
-def gen_dict():
-    dictionary = list()
-    for y_mov in range(0, 3):
-        for x_mov in range(0, 3):
-            dictionary.append([(0, x_mov), (1, y_mov), (2, 0), (3, 0)])
-            dictionary.append([(0, x_mov), (1, y_mov), (2, 1), (3, 0)])
-            dictionary.append([(0, x_mov), (1, y_mov), (2, 0), (3, 1)])
-            dictionary.append([(0, x_mov), (1, y_mov), (2, 1), (3, 1)])
-    return dictionary
+    return np_state, players_health
 
 
 def predict(agent, observations, action_space):
+    global p1_name
     if model == None:
-        global dictionary
-        dictionary = gen_dict()
-        # print(dictionary)
-        # print(len(dictionary))
         network_setup()
+        print(model.summary())
+        p1_name = agent.player.name
     # parse and format observations
-    flat_obs = process_observtions(observations, agent.player)
+    state, health_data = process_observtions(observations, agent.player)
 
-    # print(observations)
-    # print(flat_obs)
-    f = np.array(flat_obs).reshape(-1, len(flat_obs))
-    q = model.predict(f)
-    # print(model.get_layer(index=0).input_shape)
-    # print(model.summary())
-    actions = dictionary[np.argmax(q[0])]
-    print(actions)
-    return actions
+    # If game just started, send in four stacked copies of initial state
+    global setup
+    global stacked_frames
+    global players_health
+    if setup:
+        stacked_frames.append(state)
+        stacked_frames.append(state)
+        stacked_frames.append(state)
+        stacked_frames.append(state)
+        stacked_states = np.stack(stacked_frames, axis=2)
+        stacked_states = stacked_states.reshape(
+            1, stacked_states.shape[0], stacked_states.shape[1], stacked_states.shape[2])  # 1*num_of_cols*num_of_rows*4
+        setup = False
+        players_health = health_data
+    # otherwise stack new state on
+    else:
+        global previous_s_a
+        state = state.reshape(1, state.shape[0], state.shape[1], 1)
+        stacked_states = np.append(state, previous_s_a[0][:, :, :, :3], axis=3)
+        if health_data[0] <= 0:
+            reward = DEATH_REWARD
+        else:
+            reward = REWARD_PASSIVE
+        global experience_memory
+        experience_memory.append(
+            (previous_s_a[0], previous_s_a[1], reward, stacked_states))
+
+    global time_step
+    if (time_step < WAIT_UNTIL) | (random.random() < EXPLORATION_E):
+        action = VALUE_TO_ACTION[random.randint(0, len(VALUE_TO_ACTION)-1)]
+    else:
+        # Training
+        training_batch = random.sample(
+            experience_memory, BATCH_SIZE)
+
+        inputs = np.zeros(
+            (BATCH_SIZE, stacked_states.shape[1], stacked_states.shape[2], stacked_states.shape[3]))
+        targets = np.zeros((inputs.shape[0], NUM_ACTIONS))
+        for i in range(0, len(training_batch)):
+            state_t = training_batch[i][0]
+            action_t = training_batch[i][1]
+            reward_t = training_batch[i][2]
+            state_t1 = training_batch[i][3]
+            inputs[i:i + 1] = state_t
+            targets[i] = model.predict(state_t)
+            Q_sa = model.predict(state_t1)
+            targets[i, action_t] = reward_t + FUTURE_DISCOUNT * np.max(Q_sa)
+        global network_loss
+        network_loss += model.train_on_batch(inputs, targets)
+
+        # Predict new action
+        q = model.predict(stacked_states)
+        action = VALUE_TO_ACTION[np.argmax(q[0])]
+
+    previous_s_a = (stacked_states, action)
+    time_step += 1
+    print(action)
+    return action
