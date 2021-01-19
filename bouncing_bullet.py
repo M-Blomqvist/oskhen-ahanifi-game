@@ -241,7 +241,7 @@ class GameView(arcade.View):
             if self.player_damage_timers[i] > self.damage_intervall:
                 if player.collides_with_list(self.deadly_list):
                     self.player_damage_timers[i] = 0
-                    player.take_damage(10)
+                    player.take_damage(None, 10)
 
         for player in self.players:
             player.update(delta_time)

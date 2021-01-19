@@ -288,7 +288,7 @@ class Player(arcade.Sprite):
             self.arcade.all_sprites.append(bullet)
 
     def die(self):
-        self.lives -= 1
+        #self.lives -= 1
 
         if self.lives > 0:
             self.health = self.maxhealth

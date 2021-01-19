@@ -25,6 +25,7 @@ class agent_memory():
         self.name = name
         self.experience_memory = deque(maxlen=MEMORY_SIZE)
         self.previous_s_a = (None, None)
+        self.distance_to_enemy = 0
         # short-term memory for perception of time (only bullets)
         self.stacked_frames = deque([np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=np.int)
                                      for i in range(INPUT_TIME_FRAME)], maxlen=INPUT_TIME_FRAME)
@@ -42,16 +43,16 @@ agent_memory = agent_memory("Player 1")
 # create NN
 def network_setup():
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), strides=(
-        1, 1), activation='relu', input_shape=(GRID_WIDTH, GRID_HEIGHT, INPUT_CHANNELS)))
-    model.add(MaxPooling2D(pool_size=(3, 3), strides=(1, 1), padding='same'))
+    model.add(Conv2D(32, kernel_size=(6, 6), strides=(
+        3, 3), activation='relu', input_shape=(GRID_WIDTH, GRID_HEIGHT, INPUT_CHANNELS)))
+    model.add(MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same'))
     model.add(Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3), strides=(1, 1), padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
     model.add(Flatten())
-    model.add(Dense(HIDDEN_LAYER, activation='relu'))
     model.add(Dense(HIDDEN_LAYER, activation='relu'))
     model.add(Dense(NUM_ACTIONS))
     model.compile(loss='mse', optimizer='adam')
+    print(model.summary())
     return model
 
  # simple non-convolutional
@@ -69,7 +70,7 @@ network_loss = 0
 def train():
     # Training
     training_batch = random.sample(
-        agent_memory, BATCH_SIZE)
+        agent_memory.experience_memory, BATCH_SIZE)
 
     inputs = np.zeros(
         (BATCH_SIZE, GRID_WIDTH, GRID_HEIGHT, INPUT_CHANNELS))
@@ -92,8 +93,10 @@ def train():
 # process observation into int-state 56x32xINPUTCHANNELS(3 filled)  + reward
 
 
-def process_observtions(observation, player):
+def process_observtions(observation, player_name):
     reward = REWARD_PASSIVE
+    player_pos = None
+    enemy_pos = None
     np_state = np.zeros(
         (len(observation), len(observation[0]), INPUT_CHANNELS), dtype=np.uint8)
     for i in range(np_state.shape[0]):
@@ -106,16 +109,23 @@ def process_observtions(observation, player):
                 first = 0
             if type(observation[i][j][1]).__name__ == "Bullet":
                 third = 1
-            elif observation[i][j][1] == player.name:
-                second = 1
-                third = 0
-            elif observation[i][j][1] != '':
-                second = -1
-                third = 0
-            else:
+            elif observation[i][j][1] == '':
                 second = 0
                 third = 0
+            elif observation[i][j][1].name == player_name:
+                player_pos = (i, j)
+                second = 1
+                third = 0
+            else:
+                enemy_pos = (i, j)
+                second = -1
+                third = 0
             np_state[i][j][:3] = [first, second, third]
+    distance_to_enemy = abs(
+        (enemy_pos[0] - player_pos[0])) + abs((enemy_pos[1]-player_pos[1]))
+    if distance_to_enemy < agent_memory.distance_to_enemy:
+        reward += DECREASING_DISTANCE_R
+    agent_memory.distance_to_enemy = distance_to_enemy
     return np_state, reward
 
 
@@ -154,7 +164,7 @@ def predict(agent, observations, action_space):
     # network_setup()
     # print(model.summary())
     # parse and format observations
-    state, reward = process_observtions(observations, agent.player)
+    state, reward = process_observtions(observations, agent.name)
     stacked_frames = agent_memory.stacked_frames
     previous_s_a = agent_memory.previous_s_a
     # If game just started, send in stacked copies of initial state of bullets
@@ -162,16 +172,16 @@ def predict(agent, observations, action_space):
     if setup:
         for i in range(INPUT_TIME_FRAME):
             stacked_frames.append(state[:, :, 2])
-        for i in range(INPUT_TIME_FRAME, INPUT_CHANNELS):
-            state[:, :, i] = stacked_frames[i-INPUT_TIME_FRAME]
+        for i in range((INPUT_CHANNELS-INPUT_TIME_FRAME), INPUT_CHANNELS):
+            state[:, :, i] = stacked_frames[i-INPUT_TIME_FRAME-1]
         stacked_state = state.reshape(
             1, state.shape[0], state.shape[1], state.shape[2])
         setup = False
     # otherwise stack new bullet state on
     else:
         stacked_frames.append(state[:, :, 2])
-        for i in range(INPUT_TIME_FRAME, INPUT_CHANNELS):
-            state[:, :, i] = stacked_frames[i-INPUT_TIME_FRAME]
+        for i in range((INPUT_CHANNELS-INPUT_TIME_FRAME), INPUT_CHANNELS):
+            state[:, :, i] = stacked_frames[i-INPUT_TIME_FRAME-1]
         stacked_state = state.reshape(
             1, state.shape[0], state.shape[1], state.shape[2])
         agent_memory.add_memory(
@@ -181,10 +191,9 @@ def predict(agent, observations, action_space):
     if (time_step < WAIT_UNTIL) | (random.random() < EXPLORATION_E):
         action = VALUE_TO_ACTION[random.randint(0, len(VALUE_TO_ACTION)-1)]
     else:
-
+        # train()
         # Predict new action
         q = model.predict(stacked_state)
-        print(model.summary())
         action = VALUE_TO_ACTION[np.argmax(q[0])]
     agent_memory.set_prev_sa(stacked_state, action)
     time_step += 1
