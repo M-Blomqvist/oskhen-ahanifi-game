@@ -184,6 +184,7 @@ def predict(agent, observations, action_space):
 
         # Predict new action
         q = model.predict(stacked_state)
+        print(model.summary())
         action = VALUE_TO_ACTION[np.argmax(q[0])]
     agent_memory.set_prev_sa(stacked_state, action)
     time_step += 1
