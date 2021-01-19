@@ -72,12 +72,14 @@ class GameView(arcade.View):
         mode = settings["mode"]
         if mode != "PvP":
             self.player2.is_ai = True
-            agent = ai_interface.Agent(settings["p2_ai"], self.player2)
+            agent = ai_interface.Agent(
+                "Player 2", settings["p2_ai"], self.player2)
             agent.observation = self.boardstate
             self.agents.append(agent)
             if mode == "EvE":
                 self.player1.is_ai = True
-                agent = ai_interface.Agent(settings["p1_ai"], self.player1)
+                agent = ai_interface.Agent(
+                    "Player 1", settings["p1_ai"], self.player1)
                 agent.observation = self.boardstate
                 self.agents.append(agent)
 
@@ -121,11 +123,11 @@ class GameView(arcade.View):
                                                            scaling=TILE_SCALING,
                                                            use_spatial_hash=True))
 
-        #-- Floor
+        # -- Floor
         self.floor_list = arcade.SpriteList(is_static=True)
         self.floor_list.extend(arcade.tilemap.process_layer(
             my_map, floor_layer_name, TILE_SCALING))
-        #-- Deadly
+        # -- Deadly
         self.deadly_list = arcade.SpriteList(
             is_static=True, use_spatial_hash=True)
         self.deadly_list.extend(arcade.tilemap.process_layer(
@@ -138,7 +140,7 @@ class GameView(arcade.View):
         self.nonpassable.extend(self.wall_list)
 
     def on_draw(self):
-        """Called whenever you need to draw your window 
+        """Called whenever you need to draw your window
         # Clear the screen and start drawing """
         arcade.start_render()
         self.floor_list.draw()
