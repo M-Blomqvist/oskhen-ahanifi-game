@@ -139,20 +139,22 @@ class GameView(arcade.View):
 
     def on_draw(self):
         """Called whenever you need to draw your window 
-        # Clear the screen and start drawing
+        # Clear the screen and start drawing """
         arcade.start_render()
         self.floor_list.draw()
         self.deadly_list.draw()
         self.wall_list.draw()
         self.players.draw()
         self.bullets.draw()
-        offset_x=0
+        offset_x = 0
         for player in self.players:
             num_dashes = int(player.health/10)
-            text = f"|"+'#'*num_dashes+'_'*(10-num_dashes)+'|'+" "*3 + "X"*player.lives
-            arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT-30, arcade.color.RADICAL_RED, 20)
-            offset_x+=300
-        self.players.draw()"""
+            text = f"|"+'#'*num_dashes+'_' * \
+                (10-num_dashes)+'|'+" "*3 + "X"*player.lives
+            arcade.draw_text(text, 30+offset_x, SCREEN_HEIGHT -
+                             30, arcade.color.RADICAL_RED, 20)
+            offset_x += 300
+        self.players.draw()
 
     def get_observation(self):
         return self.boardstate
@@ -224,10 +226,12 @@ class GameView(arcade.View):
                 bullet.update()
 
             else:
+                for player in self.players:
+                    player.shot_by = None
                 players_hit = arcade.check_for_collision_with_list(
                     bullet, self.players)
                 for player in players_hit:
-                    player.take_damage(10)
+                    player.take_damage(bullet.shot_by, 10)
                     bullet.destroy()
 
         # Environmental Damage
