@@ -6,6 +6,10 @@ import random
 from pymunk import Vec2d
 
 
+# Network for both agents
+model = None
+network_loss = 0
+
 VALUE_TO_ACTION = {
     Vec2d(0, 1).int_tuple: (1, 1),
     Vec2d(0, -1).int_tuple: (1, 2),
@@ -35,6 +39,13 @@ class Agent():
         self.name = name
         self.player = player
         self.ai_module = self.load_module(ai_script)
+        global network_loss
+        self.network_loss = network_loss
+        global model
+        if model == None:
+            model = self.ai_module.network_setup()
+        else:
+            self.ai_module.new_ai = False
         self.action_space = MultiDiscrete([3, 3, 2, 2])
         self.action_key_map = self.generate_action_keymap(player)
 
@@ -50,8 +61,12 @@ class Agent():
         return keys
 
     def predict(self):
-        actions = self.ai_module.predict(
-            self, self.observation, self.action_space)
+        global model
+        global network_loss
+        actions, loss = self.ai_module.predict(
+            self, model, self.observation, self.action_space)
+        network_loss += loss
+        self.network_loss = network_loss
         return self.get_action_key(actions)
 
     def load_module(self, path):

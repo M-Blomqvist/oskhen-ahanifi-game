@@ -76,7 +76,7 @@ class DefaultState():
 
             num_dashes = int(player.health/10)
             text = f"|"+'_'*num_dashes+' '*(10-num_dashes)+'|'
-            print(text)
+            # print(text)
 
     def on_key_press(self, player, key):
 
@@ -140,7 +140,7 @@ class DashState(DefaultState):
         self.time_since_dashed += delta_time
         player.input_context.time_prev_press += delta_time
         if self.time_since_dashed > self.dash_time or player.collided:
-            print("end dash")
+            #print("end dash")
             player.to_prev_state()
 
     def on_key_press(self, player, key):

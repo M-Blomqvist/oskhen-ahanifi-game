@@ -241,7 +241,7 @@ class GameView(arcade.View):
             if self.player_damage_timers[i] > self.damage_intervall:
                 if player.collides_with_list(self.deadly_list):
                     self.player_damage_timers[i] = 0
-                    player.take_damage(None, 10)
+                    player.take_damage("Environment", 10)
 
         for player in self.players:
             player.update(delta_time)
@@ -264,8 +264,14 @@ class GameView(arcade.View):
                 player.on_key_release(key, modifiers)
 
     def gameover(self, player):
-        gameover_view = GameOverView(player.name)
-        self.window.show_view(gameover_view)
+        settings = parseconf.parsefile()
+        if settings["AUTO_RESTART"] == True:
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
+        else:
+            gameover_view = GameOverView(player.name)
+            self.window.show_view(gameover_view)
 
 
 class MenuView(arcade.View):
